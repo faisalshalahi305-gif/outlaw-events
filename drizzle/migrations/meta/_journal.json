@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1788202823765,
+      "tag": "0000_outlaw_initial_schema",
+      "breakpoints": true
+    }
+  ]
+}
