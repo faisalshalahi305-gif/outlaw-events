@@ -10,11 +10,17 @@ export type GateSession = {
   visitorNumber?: number;
 };
 
+function sessionPassword(): string {
+  const raw = process.env["SESSION_SECRET"] ?? process.env["ADMIN_HASH_SALT"] ?? "";
+  // useSession requires at least 32 characters. Derive a deterministic,
+  // long-enough key so a missing/short secret can never break the gate.
+  if (raw.length >= 32) return raw;
+  return createHash("sha512").update(`outlaw-gate:${raw}`, "utf8").digest("hex");
+}
+
 function sessionConfig() {
-  const password = process.env["SESSION_SECRET"];
-  if (!password) throw new Error("SESSION_SECRET is not set");
   return {
-    password,
+    password: sessionPassword(),
     name: "outlaw-gate",
     maxAge: 60 * 60 * 12,
     cookie: {
@@ -26,9 +32,32 @@ function sessionConfig() {
   };
 }
 
-export function gateSession() {
-  return useSession<GateSession>(sessionConfig());
+type GateSessionHandle = {
+  data: GateSession;
+  update: (value: Partial<GateSession>) => Promise<unknown> | unknown;
+  clear: () => Promise<unknown> | unknown;
+};
+
+/**
+ * The cookie session is a convenience layer only — the database is the source
+ * of truth. Never let cookie problems break verification, so failures degrade
+ * to an in-memory no-op session instead of throwing.
+ */
+export async function gateSession(): Promise<GateSessionHandle> {
+  try {
+    return (await useSession<GateSession>(sessionConfig())) as unknown as GateSessionHandle;
+  } catch {
+    const data: GateSession = {};
+    return {
+      data,
+      update: (value: Partial<GateSession>) => Object.assign(data, value),
+      clear: () => {
+        for (const key of Object.keys(data)) delete (data as Record<string, unknown>)[key];
+      },
+    };
+  }
 }
+
 
 export function hashSecret(value: string): string {
   const salt = process.env["ADMIN_HASH_SALT"] ?? "";
