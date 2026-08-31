@@ -14,13 +14,256 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      admin_credential: {
+        Row: {
+          code_hash: string
+          created_at: string
+          id: boolean
+          image_hash: string
+          updated_at: string
+        }
+        Insert: {
+          code_hash: string
+          created_at?: string
+          id?: boolean
+          image_hash: string
+          updated_at?: string
+        }
+        Update: {
+          code_hash?: string
+          created_at?: string
+          id?: boolean
+          image_hash?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      block_images: {
+        Row: {
+          block_id: string
+          created_at: string
+          id: string
+          path: string
+          position: number
+          updated_at: string
+        }
+        Insert: {
+          block_id: string
+          created_at?: string
+          id?: string
+          path: string
+          position?: number
+          updated_at?: string
+        }
+        Update: {
+          block_id?: string
+          created_at?: string
+          id?: string
+          path?: string
+          position?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "block_images_block_id_fkey"
+            columns: ["block_id"]
+            isOneToOne: false
+            referencedRelation: "blocks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blocks: {
+        Row: {
+          content: string
+          id: string
+          image_url: string | null
+          section: string
+          slot: number
+          updated_at: string
+        }
+        Insert: {
+          content?: string
+          id?: string
+          image_url?: string | null
+          section?: string
+          slot: number
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          id?: string
+          image_url?: string | null
+          section?: string
+          slot?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      gate_verifications: {
+        Row: {
+          access_expires_at: string | null
+          access_token_hash: string | null
+          attempted_at: string | null
+          entered_at: string
+          id: string
+          last_seen_at: string | null
+          session_binding_hash: string
+          status: string
+          verified_at: string | null
+          visitor_id: string
+          visitor_number: number
+        }
+        Insert: {
+          access_expires_at?: string | null
+          access_token_hash?: string | null
+          attempted_at?: string | null
+          entered_at?: string
+          id?: string
+          last_seen_at?: string | null
+          session_binding_hash: string
+          status?: string
+          verified_at?: string | null
+          visitor_id: string
+          visitor_number: number
+        }
+        Update: {
+          access_expires_at?: string | null
+          access_token_hash?: string | null
+          attempted_at?: string | null
+          entered_at?: string
+          id?: string
+          last_seen_at?: string | null
+          session_binding_hash?: string
+          status?: string
+          verified_at?: string | null
+          visitor_id?: string
+          visitor_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gate_verifications_visitor_id_fkey"
+            columns: ["visitor_id"]
+            isOneToOne: false
+            referencedRelation: "visitors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      revisions: {
+        Row: {
+          created_at: string
+          id: string
+          items: Json
+          note: string | null
+          reviewed_at: string | null
+          section: string
+          status: string
+          visitor_number: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          items?: Json
+          note?: string | null
+          reviewed_at?: string | null
+          section: string
+          status?: string
+          visitor_number?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          items?: Json
+          note?: string | null
+          reviewed_at?: string | null
+          section?: string
+          status?: string
+          visitor_number?: number | null
+        }
+        Relationships: []
+      }
+      site_settings: {
+        Row: {
+          id: boolean
+          updated_at: string
+          view_only: boolean
+        }
+        Insert: {
+          id?: boolean
+          updated_at?: string
+          view_only?: boolean
+        }
+        Update: {
+          id?: boolean
+          updated_at?: string
+          view_only?: boolean
+        }
+        Relationships: []
+      }
+      suggestions: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          images: string[]
+          name: string
+          title: string
+          updated_at: string
+          visitor_number: number | null
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          images?: string[]
+          name: string
+          title: string
+          updated_at?: string
+          visitor_number?: number | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          images?: string[]
+          name?: string
+          title?: string
+          updated_at?: string
+          visitor_number?: number | null
+        }
+        Relationships: []
+      }
+      visitors: {
+        Row: {
+          created_at: string
+          id: string
+          label: string | null
+          number: number
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label?: string | null
+          number?: number
+          token: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string | null
+          number?: number
+          token?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_view_only: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
