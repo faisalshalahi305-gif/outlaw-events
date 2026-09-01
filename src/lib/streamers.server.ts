@@ -1,3 +1,5 @@
+import "./env.server";
+
 export type KickStreamer = {
   username: string;
   displayName: string;
