@@ -1,6 +1,10 @@
 import { useSession } from "@tanstack/react-start/server";
 import { createHash, timingSafeEqual } from "node:crypto";
 
+import { applyEnvAliases, envValue } from "./env.server";
+
+applyEnvAliases();
+
 export type GateSession = {
   admin?: boolean;
   at?: number;
@@ -11,7 +15,7 @@ export type GateSession = {
 };
 
 function sessionPassword(): string {
-  const raw = process.env["SESSION_SECRET"] ?? process.env["ADMIN_HASH_SALT"] ?? "";
+  const raw = envValue("SESSION_SECRET") || envValue("ADMIN_HASH_SALT");
   // useSession requires at least 32 characters. Derive a deterministic,
   // long-enough key so a missing/short secret can never break the gate.
   if (raw.length >= 32) return raw;
@@ -60,7 +64,7 @@ export async function gateSession(): Promise<GateSessionHandle> {
 
 
 export function hashSecret(value: string): string {
-  const salt = process.env["ADMIN_HASH_SALT"] ?? "";
+  const salt = envValue("ADMIN_HASH_SALT");
   return createHash("sha256").update(`${salt}:${value}`, "utf8").digest("hex");
 }
 
