@@ -269,6 +269,7 @@ export type Database = {
         Returns: {
           initialized: boolean
           verification_id: string
+          visitor_id: string
           visitor_label: string
           visitor_number: number
         }[]
@@ -289,6 +290,17 @@ export type Database = {
         }[]
       }
       gate_revoke: { Args: { p_access_token_hash: string }; Returns: undefined }
+      gate_session_admin: {
+        Args: {
+          p_binding_hash: string
+          p_verification_id: string
+          p_visitor_id: string
+        }
+        Returns: {
+          admin: boolean
+          visitor_number: number
+        }[]
+      }
       gate_verify: {
         Args: {
           p_access_expires_at: string
