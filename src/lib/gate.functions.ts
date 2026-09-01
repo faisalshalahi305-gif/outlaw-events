@@ -18,14 +18,22 @@ export const ensureVisitor = createServerFn({ method: "POST" })
     token: sanitizeToken(data?.token),
   }))
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { createGateAdminClient } = await import("./admin-db.server");
+    const supabaseAdmin = createGateAdminClient();
 
     if (data.token) {
-      const { data: existing } = await supabaseAdmin
+      const { data: existing, error: lookupError } = await supabaseAdmin
         .from("visitors")
         .select("token, number, label")
         .eq("token", data.token)
         .maybeSingle();
+      if (lookupError) {
+        console.error("[Secret Gate] Visitor lookup failed", {
+          code: lookupError.code,
+          message: lookupError.message,
+        });
+        throw new Error("visitor_lookup_failed");
+      }
       if (existing) {
         return {
           token: existing.token,
@@ -41,7 +49,13 @@ export const ensureVisitor = createServerFn({ method: "POST" })
       .insert({ token })
       .select("id, token, number")
       .single();
-    if (error || !created) throw new Error("visitor_failed");
+    if (error || !created) {
+      console.error("[Secret Gate] Visitor creation failed", {
+        code: error?.code,
+        message: error?.message,
+      });
+      throw new Error("visitor_failed");
+    }
 
     const label = `OUTLAW-VISITOR-${Number(created.number)}`;
     await supabaseAdmin.from("visitors").update({ label }).eq("id", created.id);
@@ -51,7 +65,8 @@ export const ensureVisitor = createServerFn({ method: "POST" })
 
 export const adminStatus = createServerFn({ method: "GET" }).handler(async () => {
   const session = await gateSession();
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { createGateAdminClient } = await import("./admin-db.server");
+  const supabaseAdmin = createGateAdminClient();
   const { count } = await supabaseAdmin
     .from("admin_credential")
     .select("id", { count: "exact", head: true });
@@ -62,15 +77,22 @@ export const beginGateVerification = createServerFn({ method: "POST" })
   .inputValidator((data: { token: string }) => ({ token: sanitizeToken(data?.token) }))
   .handler(async ({ data }) => {
     if (!data.token) throw new Error("visitor_not_found");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { createGateAdminClient } = await import("./admin-db.server");
+    const supabaseAdmin = createGateAdminClient();
     const session = await gateSession();
-    const { data: visitor } = await supabaseAdmin
+    const { data: visitor, error: visitorError } = await supabaseAdmin
       .from("visitors")
       .select("id, number, label")
       .eq("token", data.token)
       .maybeSingle();
 
-    if (!visitor) throw new Error("visitor_not_found");
+    if (visitorError || !visitor) {
+      console.error("[Secret Gate] Verification visitor lookup failed", {
+        code: visitorError?.code,
+        message: visitorError?.message,
+      });
+      throw new Error("visitor_not_found");
+    }
 
     const binding = crypto.randomUUID();
     const { data: verification, error } = await supabaseAdmin
@@ -83,7 +105,13 @@ export const beginGateVerification = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
-    if (error || !verification) throw new Error("verification_start_failed");
+    if (error || !verification) {
+      console.error("[Secret Gate] Verification creation failed", {
+        code: error?.code,
+        message: error?.message,
+      });
+      throw new Error("verification_start_failed");
+    }
 
     // Cookie session is a convenience layer only; the source of truth is the DB.
     try {
@@ -121,7 +149,8 @@ export const verifyGate = createServerFn({ method: "POST" })
     return { code, imageHash, visitorToken };
   })
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { createGateAdminClient } = await import("./admin-db.server");
+    const supabaseAdmin = createGateAdminClient();
     const session = await gateSession();
 
     const { data: visitor } = await supabaseAdmin
@@ -236,7 +265,8 @@ export const lockGate = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const session = await gateSession();
     if (data.accessToken) {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { createGateAdminClient } = await import("./admin-db.server");
+      const supabaseAdmin = createGateAdminClient();
       await supabaseAdmin
         .from("gate_verifications")
         .update({ status: "revoked", access_token_hash: null, access_expires_at: null })
@@ -260,7 +290,8 @@ export const requireAdmin = createServerFn({ method: "POST" })
     visitorToken: sanitizeToken(data?.visitorToken),
   }))
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { createGateAdminClient } = await import("./admin-db.server");
+    const supabaseAdmin = createGateAdminClient();
 
     if (data.accessToken) {
       const { data: row } = await supabaseAdmin
