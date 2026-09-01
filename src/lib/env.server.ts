@@ -9,7 +9,7 @@
  * Alias (user-owned)          ->  canonical name used by the app
  * GATE_SESSION_SECRET         ->  SESSION_SECRET
  * GATE_HASH_SALT              ->  ADMIN_HASH_SALT
- * SUPABASE_SECRET_KEY         ->  SUPABASE_SERVICE_ROLE_KEY
+ * DB_SERVICE_KEY         ->  SUPABASE_SERVICE_ROLE_KEY
  *
  * The alias WINS when present, so setting it in both Lovable and Vercel makes
  * the two environments byte-identical without deleting the old secrets.
@@ -17,7 +17,7 @@
 const ALIASES: Record<string, string> = {
   SESSION_SECRET: "GATE_SESSION_SECRET",
   ADMIN_HASH_SALT: "GATE_HASH_SALT",
-  SUPABASE_SERVICE_ROLE_KEY: "SUPABASE_SECRET_KEY",
+  SUPABASE_SERVICE_ROLE_KEY: "DB_SERVICE_KEY",
 };
 
 export function envValue(canonical: string): string {
