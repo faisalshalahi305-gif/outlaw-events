@@ -29,14 +29,14 @@ function createAdminFetch(key: string): typeof fetch {
  * Reading the aliases directly avoids relying on mutating process.env before
  * the generated client module happens to initialize in a serverless runtime.
  */
-export function createGateAdminClient() {
+export function createGateDatabaseClient() {
   const url = envValue("SUPABASE_URL");
-  const key = envValue("SUPABASE_SERVICE_ROLE_KEY");
+  const key = envValue("SUPABASE_PUBLISHABLE_KEY");
 
   if (!url || !key) {
     const missing = [
       ...(!url ? ["SUPABASE_URL"] : []),
-      ...(!key ? ["DB_SERVICE_KEY or SUPABASE_SERVICE_ROLE_KEY"] : []),
+      ...(!key ? ["SUPABASE_PUBLISHABLE_KEY"] : []),
     ];
     console.error(`[Secret Gate] Missing environment variable(s): ${missing.join(", ")}`);
     throw new Error("gate_environment_missing");
