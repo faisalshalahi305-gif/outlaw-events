@@ -1,3 +1,4 @@
+import "./env.server";
 import { createServerFn } from "@tanstack/react-start";
 
 const BUCKET = "suggestion-images";

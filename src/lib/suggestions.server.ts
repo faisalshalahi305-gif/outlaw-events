@@ -1,3 +1,5 @@
+import "./env.server";
+
 import { gateSession, hashSecret } from "./admin.server";
 
 /**
