@@ -138,3 +138,14 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## التشغيل على Vercel
+
+البوابة السرية تحتاج متغيرات بيئة على Vercel، وبدونها تظهر رسالة «يتعذر بدء جلسة التحقق».
+
+1. افتح `.env.example` — فيه كل المتغيرات المطلوبة.
+2. في Vercel: Project Settings → Environment Variables → أضف كل متغير (Production + Preview + Development).
+3. القيم السرية (`SUPABASE_SERVICE_ROLE_KEY`, `SESSION_SECRET`, `ADMIN_HASH_SALT`) انسخها من أسرار المشروع في Lovable.
+4. أعد النشر (Redeploy) من تبويب Deployments.
+
+بعدها تشتغل نسخة Vercel مطابقة لنسخة Lovable لأن كلاهما على نفس قاعدة البيانات.
