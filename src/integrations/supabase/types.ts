@@ -263,6 +263,48 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      gate_admin_status: { Args: never; Returns: boolean }
+      gate_begin_verification: {
+        Args: { p_binding_hash: string; p_token: string }
+        Returns: {
+          initialized: boolean
+          verification_id: string
+          visitor_label: string
+          visitor_number: number
+        }[]
+      }
+      gate_ensure_visitor: {
+        Args: { p_token?: string }
+        Returns: {
+          label: string
+          number: number
+          token: string
+        }[]
+      }
+      gate_require_admin: {
+        Args: { p_access_token_hash: string; p_visitor_token?: string }
+        Returns: {
+          admin: boolean
+          visitor_number: number
+        }[]
+      }
+      gate_revoke: { Args: { p_access_token_hash: string }; Returns: undefined }
+      gate_verify: {
+        Args: {
+          p_access_expires_at: string
+          p_access_token_hash: string
+          p_code_hash: string
+          p_image_hash: string
+          p_visitor_token: string
+        }
+        Returns: {
+          created: boolean
+          ok: boolean
+          verification_id: string
+          visitor_label: string
+          visitor_number: number
+        }[]
+      }
       is_view_only: { Args: never; Returns: boolean }
     }
     Enums: {

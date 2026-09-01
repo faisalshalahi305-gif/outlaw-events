@@ -8,6 +8,13 @@
       "when": 1788202823765,
       "tag": "0000_outlaw_initial_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788231175511,
+      "tag": "0001_secure_secret_gate_rpc",
+      "breakpoints": true
     }
   ]
 }
