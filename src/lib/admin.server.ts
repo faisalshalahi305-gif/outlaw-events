@@ -65,6 +65,10 @@ export async function gateSession(): Promise<GateSessionHandle> {
 
 export function hashSecret(value: string): string {
   const salt = envValue("ADMIN_HASH_SALT");
+  if (!salt) {
+    console.error("[Secret Gate] GATE_HASH_SALT and ADMIN_HASH_SALT are both missing");
+    throw new Error("gate_hash_salt_missing");
+  }
   return createHash("sha256").update(`${salt}:${value}`, "utf8").digest("hex");
 }
 

@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 
-import { gateSession, hashSecret, hashesMatch } from "./admin.server";
+import { gateSession, hashSecret } from "./admin.server";
 
 const ACCESS_TTL_MS = 1000 * 60 * 60 * 12;
 
@@ -18,95 +18,71 @@ export const ensureVisitor = createServerFn({ method: "POST" })
     token: sanitizeToken(data?.token),
   }))
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-    if (data.token) {
-      const { data: existing } = await supabaseAdmin
-        .from("visitors")
-        .select("token, number, label")
-        .eq("token", data.token)
-        .maybeSingle();
-      if (existing) {
-        return {
-          token: existing.token,
-          number: Number(existing.number),
-          label: existing.label ?? `OUTLAW-VISITOR-${Number(existing.number)}`,
-        };
-      }
+    const { createGateDatabaseClient } = await import("./admin-db.server");
+    const db = createGateDatabaseClient();
+    const { data: rows, error } = await db.rpc("gate_ensure_visitor", {
+      p_token: data.token || undefined,
+    });
+    const visitor = rows?.[0];
+    if (error || !visitor) {
+      console.error("[Secret Gate] Visitor creation failed", {
+        code: error?.code,
+        message: error?.message,
+      });
+      throw new Error("visitor_failed");
     }
-
-    const token = crypto.randomUUID();
-    const { data: created, error } = await supabaseAdmin
-      .from("visitors")
-      .insert({ token })
-      .select("id, token, number")
-      .single();
-    if (error || !created) throw new Error("visitor_failed");
-
-    const label = `OUTLAW-VISITOR-${Number(created.number)}`;
-    await supabaseAdmin.from("visitors").update({ label }).eq("id", created.id);
-
-    return { token: created.token, number: Number(created.number), label };
+    return { token: visitor.token, number: Number(visitor.number), label: visitor.label };
   });
 
 export const adminStatus = createServerFn({ method: "GET" }).handler(async () => {
   const session = await gateSession();
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { count } = await supabaseAdmin
-    .from("admin_credential")
-    .select("id", { count: "exact", head: true });
-  return { admin: Boolean(session.data.admin), initialized: (count ?? 0) > 0 };
+  const { createGateDatabaseClient } = await import("./admin-db.server");
+  const db = createGateDatabaseClient();
+  const { data: initialized, error } = await db.rpc("gate_admin_status");
+  if (error) throw new Error("gate_status_failed");
+  return { admin: Boolean(session.data.admin), initialized: Boolean(initialized) };
 });
 
 export const beginGateVerification = createServerFn({ method: "POST" })
   .inputValidator((data: { token: string }) => ({ token: sanitizeToken(data?.token) }))
   .handler(async ({ data }) => {
     if (!data.token) throw new Error("visitor_not_found");
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { createGateDatabaseClient } = await import("./admin-db.server");
+    const db = createGateDatabaseClient();
     const session = await gateSession();
-    const { data: visitor } = await supabaseAdmin
-      .from("visitors")
-      .select("id, number, label")
-      .eq("token", data.token)
-      .maybeSingle();
-
-    if (!visitor) throw new Error("visitor_not_found");
-
     const binding = crypto.randomUUID();
-    const { data: verification, error } = await supabaseAdmin
-      .from("gate_verifications")
-      .insert({
-        visitor_id: visitor.id,
-        visitor_number: visitor.number,
-        session_binding_hash: hashSecret(binding),
-        status: "pending",
-      })
-      .select("id")
-      .single();
-    if (error || !verification) throw new Error("verification_start_failed");
+    const bindingHash = hashSecret(binding);
+    const { data: rows, error } = await db.rpc("gate_begin_verification", {
+      p_token: data.token,
+      p_binding_hash: bindingHash,
+    });
+    const verification = rows?.[0];
+    if (error || !verification) {
+      console.error("[Secret Gate] Verification creation failed", {
+        code: error?.code,
+        message: error?.message,
+      });
+      throw new Error("verification_start_failed");
+    }
 
     // Cookie session is a convenience layer only; the source of truth is the DB.
     try {
       await session.update({
         admin: false,
         binding,
-        verificationId: verification.id,
-        visitorId: visitor.id,
-        visitorNumber: Number(visitor.number),
+        verificationId: verification.verification_id,
+        visitorId: verification.visitor_id,
+        visitorNumber: Number(verification.visitor_number),
       });
     } catch {
       /* cookies may be blocked — ignore */
     }
 
-    const { count } = await supabaseAdmin
-      .from("admin_credential")
-      .select("id", { count: "exact", head: true });
-
     return {
-      verificationId: verification.id,
-      visitorNumber: Number(visitor.number),
-      label: visitor.label ?? `OUTLAW-VISITOR-${Number(visitor.number)}`,
-      initialized: (count ?? 0) > 0,
+      verificationId: verification.verification_id,
+      visitorNumber: Number(verification.visitor_number),
+      label: verification.visitor_label,
+      initialized: verification.initialized,
     };
   });
 
@@ -121,63 +97,30 @@ export const verifyGate = createServerFn({ method: "POST" })
     return { code, imageHash, visitorToken };
   })
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { createGateDatabaseClient } = await import("./admin-db.server");
+    const db = createGateDatabaseClient();
     const session = await gateSession();
-
-    const { data: visitor } = await supabaseAdmin
-      .from("visitors")
-      .select("id, number, label")
-      .eq("token", data.visitorToken)
-      .maybeSingle();
-    if (!visitor) return { ok: false as const };
-
-    // Pick the latest pending attempt for this visitor (cookie-independent).
-    const { data: verification } = await supabaseAdmin
-      .from("gate_verifications")
-      .select("id")
-      .eq("visitor_id", visitor.id)
-      .eq("status", "pending")
-      .order("entered_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (!verification) return { ok: false as const };
-
     const codeHash = hashSecret(data.code);
     const imageHash = hashSecret(data.imageHash);
     const now = new Date();
-
-    const fail = async () => {
-      await supabaseAdmin
-        .from("gate_verifications")
-        .update({ status: "failed", attempted_at: now.toISOString() })
-        .eq("id", verification.id);
-      return { ok: false as const };
-    };
-
-    const succeed = async (created: boolean) => {
-      const accessToken = `${crypto.randomUUID()}.${crypto.randomUUID()}`;
-      const expiresAt = new Date(now.getTime() + ACCESS_TTL_MS);
-      const { error } = await supabaseAdmin
-        .from("gate_verifications")
-        .update({
-          status: "verified",
-          attempted_at: now.toISOString(),
-          verified_at: now.toISOString(),
-          last_seen_at: now.toISOString(),
-          access_token_hash: hashSecret(accessToken),
-          access_expires_at: expiresAt.toISOString(),
-        })
-        .eq("id", verification.id);
-      if (error) return { ok: false as const };
-
+    const accessToken = `${crypto.randomUUID()}.${crypto.randomUUID()}`;
+    const expiresAt = new Date(now.getTime() + ACCESS_TTL_MS);
+    const { data: rows, error } = await db.rpc("gate_verify", {
+      p_visitor_token: data.visitorToken,
+      p_code_hash: codeHash,
+      p_image_hash: imageHash,
+      p_access_token_hash: hashSecret(accessToken),
+      p_access_expires_at: expiresAt.toISOString(),
+    });
+    const result = rows?.[0];
+    if (error || !result?.ok) return { ok: false as const };
       try {
         await session.update({
           ...session.data,
           admin: true,
           at: now.getTime(),
-          verificationId: verification.id,
-          visitorId: visitor.id,
-          visitorNumber: Number(visitor.number),
+          verificationId: result.verification_id,
+          visitorNumber: Number(result.visitor_number),
         });
       } catch {
         /* cookies may be blocked — access token still works */
@@ -185,48 +128,12 @@ export const verifyGate = createServerFn({ method: "POST" })
 
       return {
         ok: true as const,
-        created,
+        created: result.created,
         accessToken,
-        verificationId: verification.id,
-        label: visitor.label ?? `OUTLAW-VISITOR-${Number(visitor.number)}`,
+        verificationId: result.verification_id,
+        label: result.visitor_label,
         expiresAt: expiresAt.toISOString(),
       };
-    };
-
-    const { data: cred } = await supabaseAdmin
-      .from("admin_credential")
-      .select("code_hash, image_hash")
-      .eq("id", true)
-      .maybeSingle();
-
-    if (!cred) {
-      // First ever code + image become the one and only official credentials.
-      const { error } = await supabaseAdmin
-        .from("admin_credential")
-        .insert({ id: true, code_hash: codeHash, image_hash: imageHash });
-      if (error) {
-        const { data: again } = await supabaseAdmin
-          .from("admin_credential")
-          .select("code_hash, image_hash")
-          .eq("id", true)
-          .maybeSingle();
-        if (
-          !again ||
-          !hashesMatch(again.code_hash, codeHash) ||
-          !hashesMatch(again.image_hash, imageHash)
-        ) {
-          return fail();
-        }
-        return succeed(false);
-      }
-      return succeed(true);
-    }
-
-    if (!hashesMatch(cred.code_hash, codeHash) || !hashesMatch(cred.image_hash, imageHash)) {
-      return fail();
-    }
-
-    return succeed(false);
   });
 
 export const lockGate = createServerFn({ method: "POST" })
@@ -236,11 +143,9 @@ export const lockGate = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const session = await gateSession();
     if (data.accessToken) {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      await supabaseAdmin
-        .from("gate_verifications")
-        .update({ status: "revoked", access_token_hash: null, access_expires_at: null })
-        .eq("access_token_hash", hashSecret(data.accessToken));
+      const { createGateDatabaseClient } = await import("./admin-db.server");
+      const db = createGateDatabaseClient();
+      await db.rpc("gate_revoke", { p_access_token_hash: hashSecret(data.accessToken) });
     }
     try {
       await session.clear();
@@ -260,31 +165,16 @@ export const requireAdmin = createServerFn({ method: "POST" })
     visitorToken: sanitizeToken(data?.visitorToken),
   }))
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { createGateDatabaseClient } = await import("./admin-db.server");
+    const db = createGateDatabaseClient();
 
     if (data.accessToken) {
-      const { data: row } = await supabaseAdmin
-        .from("gate_verifications")
-        .select("id, visitor_id, visitor_number, access_expires_at, status")
-        .eq("access_token_hash", hashSecret(data.accessToken))
-        .eq("status", "verified")
-        .maybeSingle();
-
-      if (row && row.access_expires_at && new Date(row.access_expires_at) > new Date()) {
-        if (data.visitorToken) {
-          const { data: visitor } = await supabaseAdmin
-            .from("visitors")
-            .select("id")
-            .eq("token", data.visitorToken)
-            .maybeSingle();
-          if (!visitor || visitor.id !== row.visitor_id) return { admin: false };
-        }
-        await supabaseAdmin
-          .from("gate_verifications")
-          .update({ last_seen_at: new Date().toISOString() })
-          .eq("id", row.id);
-        return { admin: true, visitorNumber: Number(row.visitor_number) };
-      }
+      const { data: rows } = await db.rpc("gate_require_admin", {
+        p_access_token_hash: hashSecret(data.accessToken),
+        p_visitor_token: data.visitorToken || undefined,
+      });
+      const result = rows?.[0];
+      if (result?.admin) return { admin: true, visitorNumber: Number(result.visitor_number) };
     }
 
     const session = await gateSession();
@@ -295,15 +185,13 @@ export const requireAdmin = createServerFn({ method: "POST" })
       return { admin: false };
     }
 
-    const { data: verification } = await supabaseAdmin
-      .from("gate_verifications")
-      .select("id, visitor_number")
-      .eq("id", verificationId)
-      .eq("visitor_id", visitorId)
-      .eq("status", "verified")
-      .maybeSingle();
-
-    return verification
-      ? { admin: true, visitorNumber: Number(verification.visitor_number) }
+    const { data: rows } = await db.rpc("gate_session_admin", {
+      p_verification_id: verificationId,
+      p_visitor_id: visitorId,
+      p_binding_hash: hashSecret(binding),
+    });
+    const result = rows?.[0];
+    return result?.admin
+      ? { admin: true, visitorNumber: Number(result.visitor_number) }
       : { admin: false };
   });
