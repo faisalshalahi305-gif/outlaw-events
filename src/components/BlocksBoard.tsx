@@ -1,11 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  MoreHorizontal,
-  Eye,
   ImagePlus,
   Save,
   Send,
-  Lock,
   ArrowRight,
   Trash2,
   Plus,
@@ -68,10 +65,6 @@ export function BlocksBoard({
   const [original, setOriginal] = useState<Block[]>([]);
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
-  const [viewOnly, setViewOnly] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [applying, setApplying] = useState(false);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
