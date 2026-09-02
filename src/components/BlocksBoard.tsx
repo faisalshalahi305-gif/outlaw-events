@@ -1,11 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  MoreHorizontal,
-  Eye,
   ImagePlus,
   Save,
   Send,
-  Lock,
   ArrowRight,
   Trash2,
   Plus,
@@ -68,17 +65,13 @@ export function BlocksBoard({
   const [original, setOriginal] = useState<Block[]>([]);
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
-  const [viewOnly, setViewOnly] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [applying, setApplying] = useState(false);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
   const [adding, setAdding] = useState(false);
   const [note, setNote] = useState("");
 
-  const editable = (admin || submitMode) && !viewOnly;
+  const editable = admin || submitMode;
 
   const signUrls = async (rows: Block[]) => {
     const paths = Array.from(
@@ -96,13 +89,12 @@ export function BlocksBoard({
   };
 
   const load = async () => {
-    const [{ data }, { data: settings }] = await Promise.all([
+    const [{ data }] = await Promise.all([
       supabase
         .from("blocks")
         .select("id, slot, content, image_url, block_images(id, path, position)")
         .eq("section", section)
         .order("slot"),
-      supabase.from("site_settings").select("view_only").maybeSingle(),
     ]);
     const rows = ((data ?? []) as any[]).map((b) => ({
       id: b.id as string,
@@ -115,7 +107,6 @@ export function BlocksBoard({
     })) as Block[];
     setBlocks(rows);
     setOriginal(rows);
-    setViewOnly(Boolean(settings?.view_only));
     await signUrls(rows);
     setLoading(false);
   };
@@ -133,11 +124,6 @@ export function BlocksBoard({
         { event: "*", schema: "public", table: "block_images" },
         () => load(),
       )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "site_settings" },
-        () => load(),
-      )
       .subscribe();
 
     return () => {
@@ -145,20 +131,6 @@ export function BlocksBoard({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [section]);
-
-  const enableViewOnly = async () => {
-    setApplying(true);
-    const { error } = await supabase
-      .from("site_settings")
-      .update({ view_only: true, updated_at: new Date().toISOString() })
-      .eq("id", true);
-    setApplying(false);
-    if (!error) {
-      setConfirmOpen(false);
-      setMenuOpen(false);
-      await load();
-    }
-  };
 
   /** Upload a file to storage and return its path (staged files live under a separate prefix). */
   const uploadFile = async (file: File, slot: number) => {
@@ -412,62 +384,6 @@ export function BlocksBoard({
         <VisitorMenu visitorNumber={visitorNumber} />
       </div>
 
-      {editable && admin && (
-        <div className="fixed left-4 top-4 z-40">
-          <button
-            aria-label="خيارات"
-            onClick={() => setMenuOpen((v) => !v)}
-            className="surface-card flex h-11 w-11 items-center justify-center rounded-full border border-border text-foreground transition-all hover:border-primary/60 hover:text-primary"
-          >
-            <MoreHorizontal className="h-5 w-5" />
-          </button>
-          {menuOpen && (
-            <div className="surface-card absolute left-0 mt-2 w-56 rounded-2xl border border-border p-2 text-right">
-              <button
-                onClick={() => {
-                  setMenuOpen(false);
-                  setConfirmOpen(true);
-                }}
-                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-foreground transition-colors hover:bg-accent"
-              >
-                <Eye className="h-4 w-4 text-primary" />
-                تفعيل وضع المشاهدة فقط
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {confirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 px-4 backdrop-blur-sm">
-          <div className="surface-card glow-ring w-full max-w-md rounded-3xl border border-border p-6 text-right">
-            <h2 className="text-lg font-extrabold text-foreground">
-              تفعيل وضع المشاهدة فقط
-            </h2>
-            <p className="mt-3 text-sm leading-6 text-muted-foreground">
-              سيتم تثبيت الموقع على آخر نسخة محفوظة من الصور والنصوص، ومنع الرفع
-              والكتابة والتعديل لجميع المستخدمين. لن يتم حذف أي محتوى، ولا يمكن
-              التراجع.
-            </p>
-            <div className="mt-6 flex gap-3">
-              <button
-                onClick={enableViewOnly}
-                disabled={applying}
-                className="flex-1 rounded-xl bg-gradient-to-l from-primary to-primary-glow px-4 py-2.5 text-sm font-bold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
-              >
-                {applying ? "جاري التفعيل…" : "موافق، فعّل الآن"}
-              </button>
-              <button
-                onClick={() => setConfirmOpen(false)}
-                className="flex-1 rounded-xl border border-input px-4 py-2.5 text-sm font-bold text-foreground transition-colors hover:bg-accent"
-              >
-                إلغاء
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="mx-auto w-full max-w-2xl">
         <header className="mb-12 text-center">
           <Link
@@ -492,12 +408,6 @@ export function BlocksBoard({
           <div className="ornament-diamond mt-6 text-[10px] tracking-[0.4em] text-muted-foreground/70">
             OUTLAW
           </div>
-          {viewOnly && (
-            <div className="surface-card mx-auto mt-6 inline-flex items-center gap-2 rounded-full border border-primary/40 px-4 py-1.5 text-xs font-bold text-primary">
-              <Lock className="h-3.5 w-3.5" />
-              وضع المشاهدة فقط مُفعّل
-            </div>
-          )}
         </header>
 
         {loading ? (
