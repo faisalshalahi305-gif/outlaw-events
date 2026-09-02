@@ -389,62 +389,6 @@ export function BlocksBoard({
         <VisitorMenu visitorNumber={visitorNumber} />
       </div>
 
-      {editable && admin && (
-        <div className="fixed left-4 top-4 z-40">
-          <button
-            aria-label="خيارات"
-            onClick={() => setMenuOpen((v) => !v)}
-            className="surface-card flex h-11 w-11 items-center justify-center rounded-full border border-border text-foreground transition-all hover:border-primary/60 hover:text-primary"
-          >
-            <MoreHorizontal className="h-5 w-5" />
-          </button>
-          {menuOpen && (
-            <div className="surface-card absolute left-0 mt-2 w-56 rounded-2xl border border-border p-2 text-right">
-              <button
-                onClick={() => {
-                  setMenuOpen(false);
-                  setConfirmOpen(true);
-                }}
-                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-foreground transition-colors hover:bg-accent"
-              >
-                <Eye className="h-4 w-4 text-primary" />
-                تفعيل وضع المشاهدة فقط
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {confirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 px-4 backdrop-blur-sm">
-          <div className="surface-card glow-ring w-full max-w-md rounded-3xl border border-border p-6 text-right">
-            <h2 className="text-lg font-extrabold text-foreground">
-              تفعيل وضع المشاهدة فقط
-            </h2>
-            <p className="mt-3 text-sm leading-6 text-muted-foreground">
-              سيتم تثبيت الموقع على آخر نسخة محفوظة من الصور والنصوص، ومنع الرفع
-              والكتابة والتعديل لجميع المستخدمين. لن يتم حذف أي محتوى، ولا يمكن
-              التراجع.
-            </p>
-            <div className="mt-6 flex gap-3">
-              <button
-                onClick={enableViewOnly}
-                disabled={applying}
-                className="flex-1 rounded-xl bg-gradient-to-l from-primary to-primary-glow px-4 py-2.5 text-sm font-bold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
-              >
-                {applying ? "جاري التفعيل…" : "موافق، فعّل الآن"}
-              </button>
-              <button
-                onClick={() => setConfirmOpen(false)}
-                className="flex-1 rounded-xl border border-input px-4 py-2.5 text-sm font-bold text-foreground transition-colors hover:bg-accent"
-              >
-                إلغاء
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="mx-auto w-full max-w-2xl">
         <header className="mb-12 text-center">
           <Link
