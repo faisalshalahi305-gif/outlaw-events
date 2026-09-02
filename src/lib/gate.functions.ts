@@ -172,7 +172,7 @@ export const requireAdmin = createServerFn({ method: "POST" })
     if (data.accessToken) {
       const { data: rows } = await db.rpc("gate_require_admin", {
         p_access_token_hash: hashSecret(data.accessToken),
-        p_visitor_token: data.visitorToken || undefined,
+        ...(data.visitorToken ? { p_visitor_token: data.visitorToken } : {}),
       });
       const result = rows?.[0];
       if (result?.admin) return { admin: true, visitorNumber: Number(result.visitor_number) };
