@@ -71,7 +71,7 @@ export function BlocksBoard({
   const [adding, setAdding] = useState(false);
   const [note, setNote] = useState("");
 
-  const editable = (admin || submitMode) && !viewOnly;
+  const editable = admin || submitMode;
 
   const signUrls = async (rows: Block[]) => {
     const paths = Array.from(
