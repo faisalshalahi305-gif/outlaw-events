@@ -1,7 +1,7 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
-import { ShieldCheck, Upload, Loader2 } from "lucide-react";
+import { ShieldCheck, Upload, Loader2, ArrowRight } from "lucide-react";
 import { beginGateVerification, ensureVisitor, verifyGate } from "@/lib/gate.functions";
 import {
   readVisitorToken,
@@ -169,6 +169,14 @@ function GatePage() {
           {(busy || !ready) && <Loader2 className="h-4 w-4 animate-spin" />}
           {ready ? "تحقق" : "جاري ربط الزائر"}
         </button>
+
+        <Link
+          to="/"
+          className="mx-auto mt-5 inline-flex items-center gap-1.5 text-sm font-bold text-muted-foreground transition-colors hover:text-primary"
+        >
+          <ArrowRight className="h-4 w-4" />
+          الرجوع للصفحة الرئيسية
+        </Link>
       </form>
     </main>
   );
