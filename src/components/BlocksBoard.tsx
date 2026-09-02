@@ -95,7 +95,6 @@ export function BlocksBoard({
         .select("id, slot, content, image_url, block_images(id, path, position)")
         .eq("section", section)
         .order("slot"),
-      supabase.from("site_settings").select("view_only").maybeSingle(),
     ]);
     const rows = ((data ?? []) as any[]).map((b) => ({
       id: b.id as string,
