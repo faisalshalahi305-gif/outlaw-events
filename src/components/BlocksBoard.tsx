@@ -89,7 +89,7 @@ export function BlocksBoard({
   };
 
   const load = async () => {
-    const [{ data }, { data: settings }] = await Promise.all([
+    const [{ data }] = await Promise.all([
       supabase
         .from("blocks")
         .select("id, slot, content, image_url, block_images(id, path, position)")
@@ -107,7 +107,6 @@ export function BlocksBoard({
     })) as Block[];
     setBlocks(rows);
     setOriginal(rows);
-    setViewOnly(Boolean(settings?.view_only));
     await signUrls(rows);
     setLoading(false);
   };
