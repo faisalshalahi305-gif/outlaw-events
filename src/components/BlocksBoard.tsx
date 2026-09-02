@@ -413,12 +413,6 @@ export function BlocksBoard({
           <div className="ornament-diamond mt-6 text-[10px] tracking-[0.4em] text-muted-foreground/70">
             OUTLAW
           </div>
-          {viewOnly && (
-            <div className="surface-card mx-auto mt-6 inline-flex items-center gap-2 rounded-full border border-primary/40 px-4 py-1.5 text-xs font-bold text-primary">
-              <Lock className="h-3.5 w-3.5" />
-              وضع المشاهدة فقط مُفعّل
-            </div>
-          )}
         </header>
 
         {loading ? (
