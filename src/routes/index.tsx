@@ -105,12 +105,17 @@ function Home() {
         <h1 className="wordmark mt-10 text-5xl drop-shadow-[0_0_28px_color-mix(in_oklab,var(--primary)_45%,transparent)]">
           OUTLAW
         </h1>
-        <p className="ornament-diamond mt-4 text-[10px] font-bold tracking-[0.45em] text-muted-foreground">
-          EST. LEGEND
+        <p className="mt-4 text-lg font-bold text-primary drop-shadow-[0_0_12px_var(--primary)]">
+          احداث اوت لاو
         </p>
 
+        <div className="mt-6 rounded-2xl border border-primary/30 bg-primary/5 p-5 text-sm leading-7 text-foreground/90 shadow-[0_0_20px_-4px_var(--primary)] backdrop-blur-sm">
+          موقع أحداث أوت لاو
+          <br />
+          موقع مخصص لمتابعي سيرفر أوت لاو يتيح لك التعرف على الشخصيات والستريمرز وأبرز أحداث السيرفر ويساعد المتابع الجديد على فهم الأحداث والشخصيات كما يتيح للمتابعين القدامى التعديل بالاضافه والحذف والتحرير على الاحداث والشخصيات لتعرف المتابعين الجدد بالسيرفر واحداثه وشخصياته وزيادة نمو السيرفر
+        </div>
 
-        <p className="mt-10 text-xs font-bold tracking-widest text-muted-foreground/70">
+        <p className="mt-8 text-xs font-bold tracking-widest text-muted-foreground/70">
           {visitorNumber ? `زائر-${visitorNumber}` : ""}
         </p>
       </div>
