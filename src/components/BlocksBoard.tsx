@@ -137,20 +137,6 @@ export function BlocksBoard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [section]);
 
-  const enableViewOnly = async () => {
-    setApplying(true);
-    const { error } = await supabase
-      .from("site_settings")
-      .update({ view_only: true, updated_at: new Date().toISOString() })
-      .eq("id", true);
-    setApplying(false);
-    if (!error) {
-      setConfirmOpen(false);
-      setMenuOpen(false);
-      await load();
-    }
-  };
-
   /** Upload a file to storage and return its path (staged files live under a separate prefix). */
   const uploadFile = async (file: File, slot: number) => {
     const ext = (file.name.split(".").pop() || "img").toLowerCase();
