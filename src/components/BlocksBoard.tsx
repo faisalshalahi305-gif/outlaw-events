@@ -124,11 +124,6 @@ export function BlocksBoard({
         { event: "*", schema: "public", table: "block_images" },
         () => load(),
       )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "site_settings" },
-        () => load(),
-      )
       .subscribe();
 
     return () => {
