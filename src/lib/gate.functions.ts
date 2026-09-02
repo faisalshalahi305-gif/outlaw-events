@@ -20,9 +20,10 @@ export const ensureVisitor = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { createGateDatabaseClient } = await import("./admin-db.server");
     const db = createGateDatabaseClient();
-    const { data: rows, error } = await db.rpc("gate_ensure_visitor", {
-      p_token: data.token || undefined,
-    });
+    const { data: rows, error } = await db.rpc(
+      "gate_ensure_visitor",
+      data.token ? { p_token: data.token } : {},
+    );
     const visitor = rows?.[0];
     if (error || !visitor) {
       console.error("[Secret Gate] Visitor creation failed", {
