@@ -640,15 +640,15 @@ function EventBlock({
         </div>
       )}
 
-      <div className="surface-card mx-auto aspect-square w-full max-w-sm overflow-hidden rounded-3xl border border-border p-1.5">
-        <div className="relative h-full w-full overflow-hidden rounded-[1.35rem] bg-secondary/40">
+      <div className="surface-card mx-auto w-full max-w-md overflow-hidden rounded-3xl border border-border p-1.5">
+        <div className="relative w-full overflow-hidden rounded-[1.35rem] bg-secondary/40">
           {currentUrl ? (
             <>
               <img
                 src={currentUrl}
                 alt={`${label} رقم ${index + 1} — صورة ${active + 1}`}
                 loading="lazy"
-                className="h-full w-full object-cover transition-transform duration-500 hover:scale-[1.03]"
+                className="w-full object-contain"
               />
               {editable && current && (
                 <div className="absolute left-3 top-3 flex gap-2">

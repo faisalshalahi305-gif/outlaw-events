@@ -130,7 +130,7 @@ function SuggestionsPanel() {
                           src={src}
                           alt={`صورة مرفقة ${i + 1} لاقتراح ${s.title}`}
                           loading="lazy"
-                          className="h-36 w-full object-cover"
+                          className="w-full object-contain"
                         />
                       </a>
                     ))}
