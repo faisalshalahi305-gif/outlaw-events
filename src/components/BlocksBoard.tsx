@@ -379,7 +379,7 @@ export function BlocksBoard({
   };
 
   return (
-    <main dir="rtl" className="relative min-h-screen px-4 pb-32 pt-8">
+    <main dir="rtl" className="relative min-h-screen px-4 pb-56 pt-8">
       <div className="fixed right-4 top-4 z-40">
         <VisitorMenu visitorNumber={visitorNumber} />
       </div>
@@ -464,8 +464,9 @@ export function BlocksBoard({
       </div>
 
       {editable && !loading && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/90 px-4 py-3 backdrop-blur">
-          <div className="mx-auto flex w-full max-w-2xl items-center justify-between gap-3">
+        <div className="fixed inset-x-0 bottom-[7.5rem] z-[60] px-4">
+          <div className="surface-card mx-auto flex w-full max-w-2xl items-center justify-between gap-3 rounded-2xl border border-primary/50 bg-background/95 px-4 py-3 shadow-[0_0_24px_-6px_var(--primary)] backdrop-blur">
+
             <span className="text-xs text-muted-foreground">
               {saveMsg ||
                 (submitMode ? `${revisionItems.length} تعديل جاهز للإرسال` : "")}

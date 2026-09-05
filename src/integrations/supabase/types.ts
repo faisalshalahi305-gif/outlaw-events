@@ -208,6 +208,9 @@ export type Database = {
           id: string
           images: string[]
           name: string
+          review_note: string | null
+          reviewed_at: string | null
+          status: string
           title: string
           updated_at: string
           visitor_number: number | null
@@ -218,6 +221,9 @@ export type Database = {
           id?: string
           images?: string[]
           name: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          status?: string
           title: string
           updated_at?: string
           visitor_number?: number | null
@@ -228,6 +234,9 @@ export type Database = {
           id?: string
           images?: string[]
           name?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          status?: string
           title?: string
           updated_at?: string
           visitor_number?: number | null

@@ -76,7 +76,7 @@ export function SuggestionsDialog({ open, onOpenChange, visitorNumber }: Props) 
           visitorNumber: visitorNumber ?? null,
         },
       });
-      setMsg("تم إرسال اقتراحك بنجاح، شكراً لك");
+      setMsg("تم إرسال اقتراحك، سيتم مراجعته وقبوله أو رفضه قريباً");
       setName("");
       setTitle("");
       setBody("");

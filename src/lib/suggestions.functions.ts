@@ -67,29 +67,38 @@ export type SuggestionRow = {
   createdAt: string;
   visitorNumber: number | null;
   images: string[];
+  status: string;
+  reviewedAt: string | null;
 };
+
+type AdminTokens = { accessToken?: string | null; visitorToken?: string | null };
+
+const cleanTokens = (data?: AdminTokens) => ({
+  accessToken: String(data?.accessToken ?? "").trim().slice(0, 200),
+  visitorToken: String(data?.visitorToken ?? "").trim().slice(0, 200),
+});
+
+async function requireGateAdmin(accessToken: string, visitorToken: string) {
+  const { isGateAdmin } = await import("./suggestions.server");
+  if (!(await isGateAdmin(accessToken, visitorToken))) throw new Error("forbidden");
+}
 
 /** Admin only: full list of suggestions with signed image URLs. */
 export const listSuggestions = createServerFn({ method: "POST" })
-  .inputValidator((data?: { accessToken?: string | null; visitorToken?: string | null }) => ({
-    accessToken: String(data?.accessToken ?? "").trim().slice(0, 200),
-    visitorToken: String(data?.visitorToken ?? "").trim().slice(0, 200),
-  }))
+  .inputValidator((data?: AdminTokens) => cleanTokens(data))
   .handler(async ({ data }) => {
-    const { isGateAdmin } = await import("./suggestions.server");
-    const allowed = await isGateAdmin(data.accessToken, data.visitorToken);
-    if (!allowed) throw new Error("forbidden");
+    await requireGateAdmin(data.accessToken, data.visitorToken);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows, error } = await supabaseAdmin
       .from("suggestions")
-      .select("id, name, title, body, images, visitor_number, created_at")
+      .select("id, name, title, body, images, visitor_number, created_at, status, reviewed_at")
       .order("created_at", { ascending: false })
       .limit(300);
     if (error) throw new Error("load_failed");
 
     const result: SuggestionRow[] = [];
-    for (const row of rows ?? []) {
+    for (const row of (rows ?? []) as any[]) {
       const paths = (row.images ?? []) as string[];
       const signed = await Promise.all(
         paths.map(async (p) => {
@@ -107,7 +116,28 @@ export const listSuggestions = createServerFn({ method: "POST" })
         createdAt: row.created_at,
         visitorNumber: row.visitor_number === null ? null : Number(row.visitor_number),
         images: signed.filter(Boolean),
+        status: String(row.status ?? "pending"),
+        reviewedAt: row.reviewed_at ?? null,
       });
     }
     return { suggestions: result };
   });
+
+/** Admin only: mark a suggestion as accepted or rejected. */
+export const reviewSuggestion = createServerFn({ method: "POST" })
+  .inputValidator((data: AdminTokens & { id: string; decision: "approved" | "rejected" }) => ({
+    ...cleanTokens(data),
+    id: String(data?.id ?? "").trim(),
+    decision: data?.decision === "rejected" ? ("rejected" as const) : ("approved" as const),
+  }))
+  .handler(async ({ data }) => {
+    await requireGateAdmin(data.accessToken, data.visitorToken);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("suggestions")
+      .update({ status: data.decision, reviewed_at: new Date().toISOString() })
+      .eq("id", data.id);
+    if (error) throw new Error("save_failed");
+    return { ok: true as const };
+  });
+
