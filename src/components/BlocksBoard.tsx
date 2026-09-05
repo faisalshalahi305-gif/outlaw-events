@@ -379,7 +379,7 @@ export function BlocksBoard({
   };
 
   return (
-    <main dir="rtl" className="relative min-h-screen px-4 pb-32 pt-8">
+    <main dir="rtl" className="relative min-h-screen px-4 pb-56 pt-8">
       <div className="fixed right-4 top-4 z-40">
         <VisitorMenu visitorNumber={visitorNumber} />
       </div>
