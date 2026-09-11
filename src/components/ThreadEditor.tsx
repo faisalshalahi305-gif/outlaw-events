@@ -114,9 +114,25 @@ export function ThreadEditor({
       .filter((e) => e.text.trim().length > 0 || e.images.length > 0);
 
     setSaving(true);
-    setMessage("جاري الحفظ…");
+    setMessage(adminMode ? "جاري الحفظ…" : "جاري الإرسال…");
     try {
-      const res = await persist({
+      if (adminMode && threadId) {
+        await saveAsAdmin({
+          data: {
+            accessToken: readAccessToken() ?? "",
+            visitorToken: readVisitorToken() ?? "",
+            id: threadId,
+            title,
+            excerpt,
+            coverPath,
+            entries,
+          },
+        });
+        router.navigate({ to: "/threads/$id", params: { id: threadId } });
+        return;
+      }
+
+      await sendForReview({
         data: {
           id: threadId ?? null,
           title,
@@ -126,9 +142,10 @@ export function ThreadEditor({
           entries,
         },
       });
-      router.navigate({ to: "/threads/$id", params: { id: res.id } });
+      setSent(true);
+      setSaving(false);
     } catch {
-      flash("تعذّر الحفظ، حاول مرة أخرى");
+      flash(adminMode ? "تعذّر الحفظ، حاول مرة أخرى" : "تعذّر الإرسال، حاول مرة أخرى");
       setSaving(false);
     }
   };
