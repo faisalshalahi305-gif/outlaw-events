@@ -30,7 +30,7 @@ import { Route as RevisionsSectionRouteImport } from './routes/revisions.$sectio
 import { Route as ThreadsIndexRouteImport } from './routes/threads.index'
 import { Route as ThreadsIdRouteImport } from './routes/threads.$id'
 import { Route as ThreadsNewRouteImport } from './routes/threads.new'
-import { Route as ThreadsEditIdRouteImport } from './routes/threads.edit.$id'
+import { Route as ControlThreadsIdRouteImport } from './routes/control.threads.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -137,10 +137,10 @@ const ThreadsNewRoute = ThreadsNewRouteImport.update({
   path: '/new',
   getParentRoute: () => ThreadsRoute,
 } as any)
-const ThreadsEditIdRoute = ThreadsEditIdRouteImport.update({
-  id: '/edit/$id',
-  path: '/edit/$id',
-  getParentRoute: () => ThreadsRoute,
+const ControlThreadsIdRoute = ControlThreadsIdRouteImport.update({
+  id: '/threads/$id',
+  path: '/threads/$id',
+  getParentRoute: () => ControlRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -165,7 +165,7 @@ export interface FileRoutesByFullPath {
   '/control/': typeof ControlIndexRoute
   '/revisions/': typeof RevisionsIndexRoute
   '/threads/': typeof ThreadsIndexRoute
-  '/threads/edit/$id': typeof ThreadsEditIdRoute
+  '/control/threads/$id': typeof ControlThreadsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -186,7 +186,7 @@ export interface FileRoutesByTo {
   '/control': typeof ControlIndexRoute
   '/revisions': typeof RevisionsIndexRoute
   '/threads': typeof ThreadsIndexRoute
-  '/threads/edit/$id': typeof ThreadsEditIdRoute
+  '/control/threads/$id': typeof ControlThreadsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -211,7 +211,7 @@ export interface FileRoutesById {
   '/control/': typeof ControlIndexRoute
   '/revisions/': typeof RevisionsIndexRoute
   '/threads/': typeof ThreadsIndexRoute
-  '/threads/edit/$id': typeof ThreadsEditIdRoute
+  '/control/threads/$id': typeof ControlThreadsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -237,7 +237,7 @@ export interface FileRouteTypes {
     | '/control/'
     | '/revisions/'
     | '/threads/'
-    | '/threads/edit/$id'
+    | '/control/threads/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -258,7 +258,7 @@ export interface FileRouteTypes {
     | '/control'
     | '/revisions'
     | '/threads'
-    | '/threads/edit/$id'
+    | '/control/threads/$id'
   id:
     | '__root__'
     | '/'
@@ -282,7 +282,7 @@ export interface FileRouteTypes {
     | '/control/'
     | '/revisions/'
     | '/threads/'
-    | '/threads/edit/$id'
+    | '/control/threads/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -447,12 +447,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ThreadsNewRouteImport
       parentRoute: typeof ThreadsRoute
     }
-    '/threads/edit/$id': {
-      id: '/threads/edit/$id'
-      path: '/edit/$id'
-      fullPath: '/threads/edit/$id'
-      preLoaderRoute: typeof ThreadsEditIdRouteImport
-      parentRoute: typeof ThreadsRoute
+    '/control/threads/$id': {
+      id: '/control/threads/$id'
+      path: '/threads/$id'
+      fullPath: '/control/threads/$id'
+      preLoaderRoute: typeof ControlThreadsIdRouteImport
+      parentRoute: typeof ControlRoute
     }
   }
 }
@@ -464,6 +464,7 @@ interface ControlRouteChildren {
   ControlStreamersRoute: typeof ControlStreamersRoute
   ControlSuggestionsRoute: typeof ControlSuggestionsRoute
   ControlIndexRoute: typeof ControlIndexRoute
+  ControlThreadsIdRoute: typeof ControlThreadsIdRoute
 }
 
 const ControlRouteChildren: ControlRouteChildren = {
@@ -473,6 +474,7 @@ const ControlRouteChildren: ControlRouteChildren = {
   ControlStreamersRoute: ControlStreamersRoute,
   ControlSuggestionsRoute: ControlSuggestionsRoute,
   ControlIndexRoute: ControlIndexRoute,
+  ControlThreadsIdRoute: ControlThreadsIdRoute,
 }
 
 const ControlRouteWithChildren =
@@ -496,14 +498,12 @@ interface ThreadsRouteChildren {
   ThreadsIdRoute: typeof ThreadsIdRoute
   ThreadsNewRoute: typeof ThreadsNewRoute
   ThreadsIndexRoute: typeof ThreadsIndexRoute
-  ThreadsEditIdRoute: typeof ThreadsEditIdRoute
 }
 
 const ThreadsRouteChildren: ThreadsRouteChildren = {
   ThreadsIdRoute: ThreadsIdRoute,
   ThreadsNewRoute: ThreadsNewRoute,
   ThreadsIndexRoute: ThreadsIndexRoute,
-  ThreadsEditIdRoute: ThreadsEditIdRoute,
 }
 
 const ThreadsRouteWithChildren =

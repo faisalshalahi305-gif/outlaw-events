@@ -6,7 +6,8 @@ import { ArrowRight, ImagePlus, Loader2, Plus, Save, Trash2, X } from "lucide-re
 import { supabase } from "@/integrations/supabase/client";
 import { VisitorMenu } from "@/components/VisitorMenu";
 import { useVisitorNumber } from "@/lib/use-visitor";
-import { getThread, saveThread } from "@/lib/threads.functions";
+import { adminSaveThread, getThread, submitThreadRequest } from "@/lib/threads.functions";
+import { readAccessToken, readVisitorToken } from "@/lib/gate-identity";
 import { THREAD_BUCKET, type ThreadEntry } from "@/lib/threads-shared";
 import logoAsset from "@/assets/outlaw-mark.jpg";
 
@@ -17,12 +18,22 @@ const uid = () =>
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2);
 
-/** Create or edit a thread — same editing surface as the events board. */
-export function ThreadEditor({ threadId }: { threadId?: string }) {
+/**
+ * Thread editing surface. Visitors send their thread to the review queue in the
+ * control panel; in admin mode the changes are applied to the thread directly.
+ */
+export function ThreadEditor({
+  threadId,
+  adminMode = false,
+}: {
+  threadId?: string;
+  adminMode?: boolean;
+}) {
   const router = useRouter();
   const visitorNumber = useVisitorNumber();
   const fetchThread = useServerFn(getThread);
-  const persist = useServerFn(saveThread);
+  const sendForReview = useServerFn(submitThreadRequest);
+  const saveAsAdmin = useServerFn(adminSaveThread);
 
   const [title, setTitle] = useState("");
   const [excerpt, setExcerpt] = useState("");
@@ -33,6 +44,7 @@ export function ThreadEditor({ threadId }: { threadId?: string }) {
   const [loadError, setLoadError] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [sent, setSent] = useState(false);
 
   const coverRef = useRef<HTMLInputElement>(null);
 
@@ -103,9 +115,25 @@ export function ThreadEditor({ threadId }: { threadId?: string }) {
       .filter((e) => e.text.trim().length > 0 || e.images.length > 0);
 
     setSaving(true);
-    setMessage("جاري الحفظ…");
+    setMessage(adminMode ? "جاري الحفظ…" : "جاري الإرسال…");
     try {
-      const res = await persist({
+      if (adminMode && threadId) {
+        await saveAsAdmin({
+          data: {
+            accessToken: readAccessToken() ?? "",
+            visitorToken: readVisitorToken() ?? "",
+            id: threadId,
+            title,
+            excerpt,
+            coverPath,
+            entries,
+          },
+        });
+        router.navigate({ to: "/threads/$id", params: { id: threadId } });
+        return;
+      }
+
+      await sendForReview({
         data: {
           id: threadId ?? null,
           title,
@@ -115,9 +143,10 @@ export function ThreadEditor({ threadId }: { threadId?: string }) {
           entries,
         },
       });
-      router.navigate({ to: "/threads/$id", params: { id: res.id } });
+      setSent(true);
+      setSaving(false);
     } catch {
-      flash("تعذّر الحفظ، حاول مرة أخرى");
+      flash(adminMode ? "تعذّر الحفظ، حاول مرة أخرى" : "تعذّر الإرسال، حاول مرة أخرى");
       setSaving(false);
     }
   };
@@ -131,25 +160,42 @@ export function ThreadEditor({ threadId }: { threadId?: string }) {
       <div className="mx-auto w-full max-w-2xl">
         <header className="mb-10 text-center">
           <Link
-            to="/threads"
+            to={adminMode ? "/control/revisions" : "/threads"}
             className="surface-card mb-8 inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-xs font-bold text-muted-foreground transition-colors hover:border-primary/60 hover:text-primary"
           >
             <ArrowRight className="h-3.5 w-3.5" />
-            الرجوع للثريدات
+            {adminMode ? "الرجوع للتعديلات" : "الرجوع للثريدات"}
           </Link>
           <p className="wordmark mb-6 text-xl">OUTLAW</p>
           <div className="halo mx-auto mb-5 h-24 w-24 overflow-hidden rounded-full border border-primary/40 glow-ring">
             <img src={logoAsset} alt="شعار Outlaw" className="h-full w-full object-cover" />
           </div>
           <h1 className="bg-gradient-to-l from-primary via-primary-glow to-primary bg-clip-text text-3xl font-extrabold text-transparent">
-            {threadId ? "تحرير الثريد" : "إنشاء ثريد"}
+            {adminMode ? "تحرير الثريد" : "إنشاء ثريد"}
           </h1>
           <p className="mt-3 text-sm text-muted-foreground">
-            العنوان والصورة والنبذة إلزامية، ثم أضف النصوص والصور كما تريد
+            {adminMode
+              ? "التعديلات هنا تُطبّق على الثريد مباشرة"
+              : "العنوان والصورة والنبذة إلزامية، ويُرسل الثريد للمراجعة قبل النشر"}
           </p>
         </header>
 
-        {loading ? (
+        {sent ? (
+          <section className="surface-card rounded-3xl border border-primary/50 p-6 text-center">
+            <h2 className="text-lg font-extrabold text-primary">تم إرسال الثريد للمراجعة</h2>
+            <p className="mt-3 text-sm leading-7 text-muted-foreground">
+              سيظهر الثريد بعد موافقة المشرفين عليه في قسم التعديلات.
+            </p>
+            <Link
+              to="/threads"
+              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-l from-primary to-primary-glow px-6 py-2.5 text-sm font-bold text-primary-foreground"
+            >
+              الرجوع للثريدات
+            </Link>
+          </section>
+        ) : null}
+
+        {sent ? null : loading ? (
           <p className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             جاري التحميل…
@@ -256,11 +302,14 @@ export function ThreadEditor({ threadId }: { threadId?: string }) {
         )}
       </div>
 
-      {!loading && !loadError && (
+      {!loading && !loadError && !sent && (
         <div className="fixed inset-x-0 bottom-6 z-[60] px-4">
           <div className="surface-card mx-auto flex w-full max-w-2xl items-center justify-between gap-3 rounded-2xl border border-primary/50 bg-background/95 px-4 py-3 shadow-[0_0_24px_-6px_var(--primary)] backdrop-blur">
             <span className="text-xs text-muted-foreground">
-              {message || `${rows.length} قسم جاهز للنشر`}
+              {message ||
+                (adminMode
+                  ? `${rows.length} قسم — يُحفظ مباشرة`
+                  : `${rows.length} قسم — يُرسل للمراجعة`)}
             </span>
             <button
               onClick={submit}
@@ -272,7 +321,7 @@ export function ThreadEditor({ threadId }: { threadId?: string }) {
               ) : (
                 <Save className="h-4 w-4" />
               )}
-              حفظ
+              {adminMode ? "حفظ" : "إرسال للمراجعة"}
             </button>
           </div>
         </div>
