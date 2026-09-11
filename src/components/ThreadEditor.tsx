@@ -195,7 +195,7 @@ export function ThreadEditor({
           </section>
         ) : null}
 
-        {loading ? (
+        {sent ? null : loading ? (
           <p className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             جاري التحميل…
@@ -302,11 +302,14 @@ export function ThreadEditor({
         )}
       </div>
 
-      {!loading && !loadError && (
+      {!loading && !loadError && !sent && (
         <div className="fixed inset-x-0 bottom-6 z-[60] px-4">
           <div className="surface-card mx-auto flex w-full max-w-2xl items-center justify-between gap-3 rounded-2xl border border-primary/50 bg-background/95 px-4 py-3 shadow-[0_0_24px_-6px_var(--primary)] backdrop-blur">
             <span className="text-xs text-muted-foreground">
-              {message || `${rows.length} قسم جاهز للنشر`}
+              {message ||
+                (adminMode
+                  ? `${rows.length} قسم — يُحفظ مباشرة`
+                  : `${rows.length} قسم — يُرسل للمراجعة`)}
             </span>
             <button
               onClick={submit}
@@ -318,7 +321,7 @@ export function ThreadEditor({
               ) : (
                 <Save className="h-4 w-4" />
               )}
-              حفظ
+              {adminMode ? "حفظ" : "إرسال للمراجعة"}
             </button>
           </div>
         </div>
