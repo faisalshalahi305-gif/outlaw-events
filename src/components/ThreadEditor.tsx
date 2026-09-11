@@ -44,6 +44,7 @@ export function ThreadEditor({
   const [loadError, setLoadError] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [sent, setSent] = useState(false);
 
   const coverRef = useRef<HTMLInputElement>(null);
 
@@ -159,23 +160,40 @@ export function ThreadEditor({
       <div className="mx-auto w-full max-w-2xl">
         <header className="mb-10 text-center">
           <Link
-            to="/threads"
+            to={adminMode ? "/control/revisions" : "/threads"}
             className="surface-card mb-8 inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-xs font-bold text-muted-foreground transition-colors hover:border-primary/60 hover:text-primary"
           >
             <ArrowRight className="h-3.5 w-3.5" />
-            الرجوع للثريدات
+            {adminMode ? "الرجوع للتعديلات" : "الرجوع للثريدات"}
           </Link>
           <p className="wordmark mb-6 text-xl">OUTLAW</p>
           <div className="halo mx-auto mb-5 h-24 w-24 overflow-hidden rounded-full border border-primary/40 glow-ring">
             <img src={logoAsset} alt="شعار Outlaw" className="h-full w-full object-cover" />
           </div>
           <h1 className="bg-gradient-to-l from-primary via-primary-glow to-primary bg-clip-text text-3xl font-extrabold text-transparent">
-            {threadId ? "تحرير الثريد" : "إنشاء ثريد"}
+            {adminMode ? "تحرير الثريد" : "إنشاء ثريد"}
           </h1>
           <p className="mt-3 text-sm text-muted-foreground">
-            العنوان والصورة والنبذة إلزامية، ثم أضف النصوص والصور كما تريد
+            {adminMode
+              ? "التعديلات هنا تُطبّق على الثريد مباشرة"
+              : "العنوان والصورة والنبذة إلزامية، ويُرسل الثريد للمراجعة قبل النشر"}
           </p>
         </header>
+
+        {sent ? (
+          <section className="surface-card rounded-3xl border border-primary/50 p-6 text-center">
+            <h2 className="text-lg font-extrabold text-primary">تم إرسال الثريد للمراجعة</h2>
+            <p className="mt-3 text-sm leading-7 text-muted-foreground">
+              سيظهر الثريد بعد موافقة المشرفين عليه في قسم التعديلات.
+            </p>
+            <Link
+              to="/threads"
+              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-l from-primary to-primary-glow px-6 py-2.5 text-sm font-bold text-primary-foreground"
+            >
+              الرجوع للثريدات
+            </Link>
+          </section>
+        ) : null}
 
         {loading ? (
           <p className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
