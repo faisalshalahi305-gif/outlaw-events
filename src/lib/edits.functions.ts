@@ -4,12 +4,15 @@ import { createServerFn } from "@tanstack/react-start";
 import {
   cleanEntries,
   cleanSection,
+  cleanThreadPayload,
   cleanTokens,
   EDIT_BUCKET,
+  isThreadSection,
   type AdminTokens,
   type EditEntry,
   type EditRequest,
 } from "./edits-shared";
+import { cleanThreadEntries } from "./threads-shared";
 
 export type { EditEntry, EditRequest } from "./edits-shared";
 
@@ -104,16 +107,18 @@ export const listEdits = createServerFn({ method: "POST" })
     const db = await admin();
     const { data: rows, error } = await db
       .from("edit_requests")
-      .select("id, section, visitor_number, note, status, entries, created_at, reviewed_at")
+      .select(
+        "id, section, visitor_number, note, status, entries, target_id, payload, created_at, reviewed_at",
+      )
       .order("created_at", { ascending: false })
       .limit(200);
     if (error) throw new Error("load_failed");
 
     const list = (rows ?? []) as any[];
-    const imageUrls = await signAll(
-      db,
-      list.flatMap((r) => cleanEntries(r.entries).flatMap((e) => e.images)),
-    );
+    const imageUrls = await signAll(db, [
+      ...list.flatMap((r) => cleanEntries(r.entries).flatMap((e) => e.images)),
+      ...list.map((r) => cleanThreadPayload(r.payload)?.coverPath ?? ""),
+    ]);
 
     const requests: EditRequest[] = list.map((r) => ({
       id: r.id,
@@ -124,6 +129,8 @@ export const listEdits = createServerFn({ method: "POST" })
       createdAt: r.created_at,
       reviewedAt: r.reviewed_at,
       entries: cleanEntries(r.entries),
+      targetId: r.target_id ?? null,
+      payload: cleanThreadPayload(r.payload),
       imageUrls,
     }));
 
