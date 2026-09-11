@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowRight, Loader2, PencilLine } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 
 import { VisitorMenu } from "@/components/VisitorMenu";
 import { useVisitorNumber } from "@/lib/use-visitor";
@@ -81,14 +81,6 @@ function ThreadPage() {
           <div className="ornament-diamond mt-6 text-[10px] tracking-[0.4em] text-muted-foreground/70">
             OUTLAW
           </div>
-          <Link
-            to="/threads/edit/$id"
-            params={{ id }}
-            className="surface-card mt-8 inline-flex items-center gap-2 rounded-full border border-primary/50 px-5 py-2.5 text-xs font-bold text-primary transition-colors hover:bg-accent"
-          >
-            <PencilLine className="h-3.5 w-3.5" />
-            تحرير هذا الثريد
-          </Link>
         </header>
 
         {loading ? (
