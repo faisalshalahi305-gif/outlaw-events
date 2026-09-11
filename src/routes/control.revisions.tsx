@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, Check, Loader2, Search, Trash2 } from "lucide-react";
+import { ArrowRight, Check, Loader2, PencilLine, Search, Trash2 } from "lucide-react";
 
 import { decideEdit, listEdits, type EditRequest } from "@/lib/edits.functions";
 import {
@@ -74,6 +74,8 @@ function RevisionsPanel() {
         data: { accessToken: readAccessToken(), visitorToken: readVisitorToken() },
       });
       setRequests(res.requests);
+      const threadRes = await loadThreads({ data: {} });
+      setThreads(threadRes.threads);
     } catch {
       setError("تعذّر تحميل قائمة التعديلات");
     } finally {
@@ -123,6 +125,27 @@ function RevisionsPanel() {
   };
 
   const pendingCount = requests.filter((r) => r.status === "pending").length;
+
+  const removeThread = async (id: string, title: string) => {
+    if (!window.confirm(`حذف الثريد «${title}» نهائيًا؟`)) return;
+    setBusy(id);
+    setMessage("");
+    try {
+      await dropThread({
+        data: {
+          id,
+          accessToken: readAccessToken(),
+          visitorToken: readVisitorToken(),
+        },
+      });
+      setMessage("تم حذف الثريد ✓");
+      await refresh();
+    } catch {
+      setMessage("تعذّر حذف الثريد");
+    }
+    setBusy("");
+    setTimeout(() => setMessage(""), 4000);
+  };
 
   return (
     <main dir="rtl" className="relative min-h-screen px-4 pb-24 pt-8">
