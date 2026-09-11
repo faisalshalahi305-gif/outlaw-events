@@ -1,0 +1,134 @@
+CREATE TABLE IF NOT EXISTS public.revisions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  section text NOT NULL,
+  visitor_number bigint,
+  note text,
+  status text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected')),
+  items jsonb NOT NULL DEFAULT '[]'::jsonb,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  reviewed_at timestamptz
+);
+GRANT ALL ON public.revisions TO service_role;
+ALTER TABLE public.revisions ENABLE ROW LEVEL SECURITY;
+CREATE INDEX IF NOT EXISTS revisions_status_created_idx ON public.revisions (status, created_at DESC);
+CREATE TABLE IF NOT EXISTS public.streamers (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  username text NOT NULL,
+  display_name text NOT NULL DEFAULT '',
+  status text NOT NULL DEFAULT 'pending',
+  visitor_number bigint,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  reviewed_at timestamptz
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS streamers_username_key ON public.streamers (lower(username));
+
+GRANT SELECT ON public.streamers TO anon, authenticated;
+GRANT ALL ON public.streamers TO service_role;
+
+ALTER TABLE public.streamers ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "public read approved streamers" ON public.streamers;
+CREATE POLICY "public read approved streamers" ON public.streamers
+  FOR SELECT TO anon, authenticated USING (status = 'approved');
+
+INSERT INTO public.streamers (username, display_name, status) VALUES
+  ('D7DN', 'D7DN', 'approved'),
+  ('i_CARLOS', 'i_CARLOS', 'approved'),
+  ('Maramjk', 'Maramjk', 'approved'),
+  ('Roven9', 'Roven9', 'approved'),
+  ('TheD7mi', 'TheD7mi', 'approved'),
+  ('viEquL', 'viEquL', 'approved'),
+  ('HalaMadrld', 'HalaMadrld', 'approved'),
+  ('IIRYOOF', 'IIRYOOF', 'approved'),
+  ('mo7x', 'mo7x', 'approved'),
+  ('Rashed7cr', 'Rashed7cr', 'approved'),
+  ('qTuurkii', 'qTuurkii', 'approved'),
+  ('kloovr', 'kloovr', 'approved'),
+  ('ONLY3BED', 'ONLY3BED', 'approved'),
+  ('1BeKi', '1BeKi', 'approved'),
+  ('Amjaad8', 'Amjaad8', 'approved'),
+  ('2lovx', '2lovx', 'approved'),
+  ('LTxMax', 'LTxMax', 'approved'),
+  ('iaz00zi', 'iaz00zi', 'approved'),
+  ('TEFN', 'TEFN', 'approved'),
+  ('Abu_Samrah', 'Abu_Samrah', 'approved'),
+  ('LuneDee', 'LuneDee', 'approved'),
+  ('rsyq', 'rsyq', 'approved'),
+  ('lsalman', 'lsalman', 'approved'),
+  ('iNaax', 'iNaax', 'approved'),
+  ('i3L0', 'i3L0', 'approved'),
+  ('iEnemy01', 'iEnemy01', 'approved'),
+  ('z3zw', 'z3zw', 'approved'),
+  ('4adell', '4adell', 'approved'),
+  ('v7MOD1', 'v7MOD1', 'approved'),
+  ('illeah', 'illeah', 'approved'),
+  ('Mazyadov', 'Mazyadov', 'approved'),
+  ('iClassie', 'iClassie', 'approved'),
+  ('Trook', 'Trook', 'approved'),
+  ('1tr_7', '1tr_7', 'approved'),
+  ('ID7mny', 'ID7mny', 'approved'),
+  ('modchi23', 'modchi23', 'approved'),
+  ('Evely3', 'Evely3', 'approved'),
+  ('abussara', 'abussara', 'approved'),
+  ('KeepSmiIe', 'KeepSmiIe', 'approved'),
+  ('1LCFEER', '1LCFEER', 'approved'),
+  ('su_s', 'su_s', 'approved'),
+  ('1SLaW', '1SLaW', 'approved'),
+  ('iHIMO', 'iHIMO', 'approved'),
+  ('ronn1i', 'ronn1i', 'approved'),
+  ('INQ', 'INQ', 'approved'),
+  ('F5Mx', 'F5Mx', 'approved'),
+  ('MJBOR', 'MJBOR', 'approved'),
+  ('TRONTT', 'TRONTT', 'approved'),
+  ('Noura_G2', 'Noura_G2', 'approved'),
+  ('oMuTx', 'oMuTx', 'approved'),
+  ('izoz11', 'izoz11', 'approved'),
+  ('Talf_305', 'Talf_305', 'approved'),
+  ('ShanKS_u', 'ShanKS_u', 'approved'),
+  ('MoShz', 'MoShz', 'approved'),
+  ('1CJx', '1CJx', 'approved'),
+  ('DHM_9', 'DHM_9', 'approved'),
+  ('Dahrooj', 'Dahrooj', 'approved'),
+  ('IMOD', 'IMOD', 'approved'),
+  ('iMERT', 'iMERT', 'approved'),
+  ('iD7D7', 'iD7D7', 'approved'),
+  ('QYem', 'QYem', 'approved'),
+  ('7arith', '7arith', 'approved'),
+  ('lFxr', 'lFxr', 'approved'),
+  ('Anas7', 'Anas7', 'approved'),
+  ('iDew', 'iDew', 'approved'),
+  ('5ald', '5ald', 'approved'),
+  ('Jehad_abr', 'Jehad_abr', 'approved'),
+  ('DBIIS', 'DBIIS', 'approved'),
+  ('iRellaX', 'iRellaX', 'approved'),
+  ('S0VE', 'S0VE', 'approved'),
+  ('Fwaz', 'Fwaz', 'approved'),
+  ('Fed0tb', 'Fed0tb', 'approved'),
+  ('xEllily', 'xEllily', 'approved'),
+  ('ii2a', 'ii2a', 'approved'),
+  ('mezaar', 'mezaar', 'approved'),
+  ('4Evil', '4Evil', 'approved'),
+  ('iMsh4', 'iMsh4', 'approved'),
+  ('orkw', 'orkw', 'approved'),
+  ('alqallaf', 'alqallaf', 'approved'),
+  ('vMo0', 'vMo0', 'approved'),
+  ('Perfct', 'Perfct', 'approved'),
+  ('feras_am', 'feras_am', 'approved'),
+  ('2bo5li', '2bo5li', 'approved'),
+  ('iiKillua', 'iiKillua', 'approved'),
+  ('R3DULZ', 'R3DULZ', 'approved'),
+  ('llw3', 'llw3', 'approved'),
+  ('11Hussin', '11Hussin', 'approved'),
+  ('fttir', 'fttir', 'approved'),
+  ('vRakan2', 'vRakan2', 'approved'),
+  ('Shhhd', 'Shhhd', 'approved'),
+  ('SKY7C', 'SKY7C', 'approved'),
+  ('dozaro', 'dozaro', 'approved'),
+  ('onbader', 'onbader', 'approved'),
+  ('rmksx', 'rmksx', 'approved'),
+  ('Shadoo', 'Shadoo', 'approved')
+ON CONFLICT DO NOTHING;
+ALTER TABLE public.streamers
+  ADD COLUMN IF NOT EXISTS removal_requested_at timestamptz,
+  ADD COLUMN IF NOT EXISTS removal_visitor_number bigint;

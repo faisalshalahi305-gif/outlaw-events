@@ -10,33 +10,292 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CharactersRouteImport } from './routes/characters'
+import { Route as ControlRouteImport } from './routes/control'
+import { Route as EventsRouteImport } from './routes/events'
+import { Route as GateRouteImport } from './routes/gate'
+import { Route as RevisionsRouteImport } from './routes/revisions'
+import { Route as SetupRouteImport } from './routes/setup'
+import { Route as StreamersRouteImport } from './routes/streamers'
+import { Route as StreamersNewRouteImport } from './routes/streamers-new'
+import { Route as ThreadsRouteImport } from './routes/threads'
+import { Route as ControlIndexRouteImport } from './routes/control.index'
+import { Route as ControlCharactersRouteImport } from './routes/control.characters'
+import { Route as ControlEventsRouteImport } from './routes/control.events'
+import { Route as ControlRevisionsRouteImport } from './routes/control.revisions'
+import { Route as ControlStreamersRouteImport } from './routes/control.streamers'
+import { Route as ControlSuggestionsRouteImport } from './routes/control.suggestions'
+import { Route as RevisionsIndexRouteImport } from './routes/revisions.index'
+import { Route as RevisionsSectionRouteImport } from './routes/revisions.$section'
+import { Route as ThreadsIndexRouteImport } from './routes/threads.index'
+import { Route as ThreadsIdRouteImport } from './routes/threads.$id'
+import { Route as ThreadsNewRouteImport } from './routes/threads.new'
+import { Route as ThreadsEditIdRouteImport } from './routes/threads.edit.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CharactersRoute = CharactersRouteImport.update({
+  id: '/characters',
+  path: '/characters',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ControlRoute = ControlRouteImport.update({
+  id: '/control',
+  path: '/control',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventsRoute = EventsRouteImport.update({
+  id: '/events',
+  path: '/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GateRoute = GateRouteImport.update({
+  id: '/gate',
+  path: '/gate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RevisionsRoute = RevisionsRouteImport.update({
+  id: '/revisions',
+  path: '/revisions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SetupRoute = SetupRouteImport.update({
+  id: '/setup',
+  path: '/setup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StreamersRoute = StreamersRouteImport.update({
+  id: '/streamers',
+  path: '/streamers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StreamersNewRoute = StreamersNewRouteImport.update({
+  id: '/streamers-new',
+  path: '/streamers-new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ThreadsRoute = ThreadsRouteImport.update({
+  id: '/threads',
+  path: '/threads',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ControlIndexRoute = ControlIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ControlRoute,
+} as any)
+const ControlCharactersRoute = ControlCharactersRouteImport.update({
+  id: '/characters',
+  path: '/characters',
+  getParentRoute: () => ControlRoute,
+} as any)
+const ControlEventsRoute = ControlEventsRouteImport.update({
+  id: '/events',
+  path: '/events',
+  getParentRoute: () => ControlRoute,
+} as any)
+const ControlRevisionsRoute = ControlRevisionsRouteImport.update({
+  id: '/revisions',
+  path: '/revisions',
+  getParentRoute: () => ControlRoute,
+} as any)
+const ControlStreamersRoute = ControlStreamersRouteImport.update({
+  id: '/streamers',
+  path: '/streamers',
+  getParentRoute: () => ControlRoute,
+} as any)
+const ControlSuggestionsRoute = ControlSuggestionsRouteImport.update({
+  id: '/suggestions',
+  path: '/suggestions',
+  getParentRoute: () => ControlRoute,
+} as any)
+const RevisionsIndexRoute = RevisionsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => RevisionsRoute,
+} as any)
+const RevisionsSectionRoute = RevisionsSectionRouteImport.update({
+  id: '/$section',
+  path: '/$section',
+  getParentRoute: () => RevisionsRoute,
+} as any)
+const ThreadsIndexRoute = ThreadsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ThreadsRoute,
+} as any)
+const ThreadsIdRoute = ThreadsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ThreadsRoute,
+} as any)
+const ThreadsNewRoute = ThreadsNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => ThreadsRoute,
+} as any)
+const ThreadsEditIdRoute = ThreadsEditIdRouteImport.update({
+  id: '/edit/$id',
+  path: '/edit/$id',
+  getParentRoute: () => ThreadsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/characters': typeof CharactersRoute
+  '/control': typeof ControlRouteWithChildren
+  '/events': typeof EventsRoute
+  '/gate': typeof GateRoute
+  '/revisions': typeof RevisionsRouteWithChildren
+  '/setup': typeof SetupRoute
+  '/streamers': typeof StreamersRoute
+  '/streamers-new': typeof StreamersNewRoute
+  '/threads': typeof ThreadsRouteWithChildren
+  '/control/characters': typeof ControlCharactersRoute
+  '/control/events': typeof ControlEventsRoute
+  '/control/revisions': typeof ControlRevisionsRoute
+  '/control/streamers': typeof ControlStreamersRoute
+  '/control/suggestions': typeof ControlSuggestionsRoute
+  '/revisions/$section': typeof RevisionsSectionRoute
+  '/threads/$id': typeof ThreadsIdRoute
+  '/threads/new': typeof ThreadsNewRoute
+  '/control/': typeof ControlIndexRoute
+  '/revisions/': typeof RevisionsIndexRoute
+  '/threads/': typeof ThreadsIndexRoute
+  '/threads/edit/$id': typeof ThreadsEditIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/characters': typeof CharactersRoute
+  '/events': typeof EventsRoute
+  '/gate': typeof GateRoute
+  '/setup': typeof SetupRoute
+  '/streamers': typeof StreamersRoute
+  '/streamers-new': typeof StreamersNewRoute
+  '/control/characters': typeof ControlCharactersRoute
+  '/control/events': typeof ControlEventsRoute
+  '/control/revisions': typeof ControlRevisionsRoute
+  '/control/streamers': typeof ControlStreamersRoute
+  '/control/suggestions': typeof ControlSuggestionsRoute
+  '/revisions/$section': typeof RevisionsSectionRoute
+  '/threads/$id': typeof ThreadsIdRoute
+  '/threads/new': typeof ThreadsNewRoute
+  '/control': typeof ControlIndexRoute
+  '/revisions': typeof RevisionsIndexRoute
+  '/threads': typeof ThreadsIndexRoute
+  '/threads/edit/$id': typeof ThreadsEditIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/characters': typeof CharactersRoute
+  '/control': typeof ControlRouteWithChildren
+  '/events': typeof EventsRoute
+  '/gate': typeof GateRoute
+  '/revisions': typeof RevisionsRouteWithChildren
+  '/setup': typeof SetupRoute
+  '/streamers': typeof StreamersRoute
+  '/streamers-new': typeof StreamersNewRoute
+  '/threads': typeof ThreadsRouteWithChildren
+  '/control/characters': typeof ControlCharactersRoute
+  '/control/events': typeof ControlEventsRoute
+  '/control/revisions': typeof ControlRevisionsRoute
+  '/control/streamers': typeof ControlStreamersRoute
+  '/control/suggestions': typeof ControlSuggestionsRoute
+  '/revisions/$section': typeof RevisionsSectionRoute
+  '/threads/$id': typeof ThreadsIdRoute
+  '/threads/new': typeof ThreadsNewRoute
+  '/control/': typeof ControlIndexRoute
+  '/revisions/': typeof RevisionsIndexRoute
+  '/threads/': typeof ThreadsIndexRoute
+  '/threads/edit/$id': typeof ThreadsEditIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/characters'
+    | '/control'
+    | '/events'
+    | '/gate'
+    | '/revisions'
+    | '/setup'
+    | '/streamers'
+    | '/streamers-new'
+    | '/threads'
+    | '/control/characters'
+    | '/control/events'
+    | '/control/revisions'
+    | '/control/streamers'
+    | '/control/suggestions'
+    | '/revisions/$section'
+    | '/threads/$id'
+    | '/threads/new'
+    | '/control/'
+    | '/revisions/'
+    | '/threads/'
+    | '/threads/edit/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/characters'
+    | '/events'
+    | '/gate'
+    | '/setup'
+    | '/streamers'
+    | '/streamers-new'
+    | '/control/characters'
+    | '/control/events'
+    | '/control/revisions'
+    | '/control/streamers'
+    | '/control/suggestions'
+    | '/revisions/$section'
+    | '/threads/$id'
+    | '/threads/new'
+    | '/control'
+    | '/revisions'
+    | '/threads'
+    | '/threads/edit/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/characters'
+    | '/control'
+    | '/events'
+    | '/gate'
+    | '/revisions'
+    | '/setup'
+    | '/streamers'
+    | '/streamers-new'
+    | '/threads'
+    | '/control/characters'
+    | '/control/events'
+    | '/control/revisions'
+    | '/control/streamers'
+    | '/control/suggestions'
+    | '/revisions/$section'
+    | '/threads/$id'
+    | '/threads/new'
+    | '/control/'
+    | '/revisions/'
+    | '/threads/'
+    | '/threads/edit/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CharactersRoute: typeof CharactersRoute
+  ControlRoute: typeof ControlRouteWithChildren
+  EventsRoute: typeof EventsRoute
+  GateRoute: typeof GateRoute
+  RevisionsRoute: typeof RevisionsRouteWithChildren
+  SetupRoute: typeof SetupRoute
+  StreamersRoute: typeof StreamersRoute
+  StreamersNewRoute: typeof StreamersNewRoute
+  ThreadsRoute: typeof ThreadsRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +307,219 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/characters': {
+      id: '/characters'
+      path: '/characters'
+      fullPath: '/characters'
+      preLoaderRoute: typeof CharactersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/control': {
+      id: '/control'
+      path: '/control'
+      fullPath: '/control'
+      preLoaderRoute: typeof ControlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/events': {
+      id: '/events'
+      path: '/events'
+      fullPath: '/events'
+      preLoaderRoute: typeof EventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gate': {
+      id: '/gate'
+      path: '/gate'
+      fullPath: '/gate'
+      preLoaderRoute: typeof GateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/revisions': {
+      id: '/revisions'
+      path: '/revisions'
+      fullPath: '/revisions'
+      preLoaderRoute: typeof RevisionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/setup': {
+      id: '/setup'
+      path: '/setup'
+      fullPath: '/setup'
+      preLoaderRoute: typeof SetupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/streamers': {
+      id: '/streamers'
+      path: '/streamers'
+      fullPath: '/streamers'
+      preLoaderRoute: typeof StreamersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/streamers-new': {
+      id: '/streamers-new'
+      path: '/streamers-new'
+      fullPath: '/streamers-new'
+      preLoaderRoute: typeof StreamersNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/threads': {
+      id: '/threads'
+      path: '/threads'
+      fullPath: '/threads'
+      preLoaderRoute: typeof ThreadsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/control/': {
+      id: '/control/'
+      path: '/'
+      fullPath: '/control/'
+      preLoaderRoute: typeof ControlIndexRouteImport
+      parentRoute: typeof ControlRoute
+    }
+    '/control/characters': {
+      id: '/control/characters'
+      path: '/characters'
+      fullPath: '/control/characters'
+      preLoaderRoute: typeof ControlCharactersRouteImport
+      parentRoute: typeof ControlRoute
+    }
+    '/control/events': {
+      id: '/control/events'
+      path: '/events'
+      fullPath: '/control/events'
+      preLoaderRoute: typeof ControlEventsRouteImport
+      parentRoute: typeof ControlRoute
+    }
+    '/control/revisions': {
+      id: '/control/revisions'
+      path: '/revisions'
+      fullPath: '/control/revisions'
+      preLoaderRoute: typeof ControlRevisionsRouteImport
+      parentRoute: typeof ControlRoute
+    }
+    '/control/streamers': {
+      id: '/control/streamers'
+      path: '/streamers'
+      fullPath: '/control/streamers'
+      preLoaderRoute: typeof ControlStreamersRouteImport
+      parentRoute: typeof ControlRoute
+    }
+    '/control/suggestions': {
+      id: '/control/suggestions'
+      path: '/suggestions'
+      fullPath: '/control/suggestions'
+      preLoaderRoute: typeof ControlSuggestionsRouteImport
+      parentRoute: typeof ControlRoute
+    }
+    '/revisions/': {
+      id: '/revisions/'
+      path: '/'
+      fullPath: '/revisions/'
+      preLoaderRoute: typeof RevisionsIndexRouteImport
+      parentRoute: typeof RevisionsRoute
+    }
+    '/revisions/$section': {
+      id: '/revisions/$section'
+      path: '/$section'
+      fullPath: '/revisions/$section'
+      preLoaderRoute: typeof RevisionsSectionRouteImport
+      parentRoute: typeof RevisionsRoute
+    }
+    '/threads/': {
+      id: '/threads/'
+      path: '/'
+      fullPath: '/threads/'
+      preLoaderRoute: typeof ThreadsIndexRouteImport
+      parentRoute: typeof ThreadsRoute
+    }
+    '/threads/$id': {
+      id: '/threads/$id'
+      path: '/$id'
+      fullPath: '/threads/$id'
+      preLoaderRoute: typeof ThreadsIdRouteImport
+      parentRoute: typeof ThreadsRoute
+    }
+    '/threads/new': {
+      id: '/threads/new'
+      path: '/new'
+      fullPath: '/threads/new'
+      preLoaderRoute: typeof ThreadsNewRouteImport
+      parentRoute: typeof ThreadsRoute
+    }
+    '/threads/edit/$id': {
+      id: '/threads/edit/$id'
+      path: '/edit/$id'
+      fullPath: '/threads/edit/$id'
+      preLoaderRoute: typeof ThreadsEditIdRouteImport
+      parentRoute: typeof ThreadsRoute
+    }
   }
 }
 
+interface ControlRouteChildren {
+  ControlCharactersRoute: typeof ControlCharactersRoute
+  ControlEventsRoute: typeof ControlEventsRoute
+  ControlRevisionsRoute: typeof ControlRevisionsRoute
+  ControlStreamersRoute: typeof ControlStreamersRoute
+  ControlSuggestionsRoute: typeof ControlSuggestionsRoute
+  ControlIndexRoute: typeof ControlIndexRoute
+}
+
+const ControlRouteChildren: ControlRouteChildren = {
+  ControlCharactersRoute: ControlCharactersRoute,
+  ControlEventsRoute: ControlEventsRoute,
+  ControlRevisionsRoute: ControlRevisionsRoute,
+  ControlStreamersRoute: ControlStreamersRoute,
+  ControlSuggestionsRoute: ControlSuggestionsRoute,
+  ControlIndexRoute: ControlIndexRoute,
+}
+
+const ControlRouteWithChildren =
+  ControlRoute._addFileChildren(ControlRouteChildren)
+
+interface RevisionsRouteChildren {
+  RevisionsSectionRoute: typeof RevisionsSectionRoute
+  RevisionsIndexRoute: typeof RevisionsIndexRoute
+}
+
+const RevisionsRouteChildren: RevisionsRouteChildren = {
+  RevisionsSectionRoute: RevisionsSectionRoute,
+  RevisionsIndexRoute: RevisionsIndexRoute,
+}
+
+const RevisionsRouteWithChildren = RevisionsRoute._addFileChildren(
+  RevisionsRouteChildren,
+)
+
+interface ThreadsRouteChildren {
+  ThreadsIdRoute: typeof ThreadsIdRoute
+  ThreadsNewRoute: typeof ThreadsNewRoute
+  ThreadsIndexRoute: typeof ThreadsIndexRoute
+  ThreadsEditIdRoute: typeof ThreadsEditIdRoute
+}
+
+const ThreadsRouteChildren: ThreadsRouteChildren = {
+  ThreadsIdRoute: ThreadsIdRoute,
+  ThreadsNewRoute: ThreadsNewRoute,
+  ThreadsIndexRoute: ThreadsIndexRoute,
+  ThreadsEditIdRoute: ThreadsEditIdRoute,
+}
+
+const ThreadsRouteWithChildren =
+  ThreadsRoute._addFileChildren(ThreadsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CharactersRoute: CharactersRoute,
+  ControlRoute: ControlRouteWithChildren,
+  EventsRoute: EventsRoute,
+  GateRoute: GateRoute,
+  RevisionsRoute: RevisionsRouteWithChildren,
+  SetupRoute: SetupRoute,
+  StreamersRoute: StreamersRoute,
+  StreamersNewRoute: StreamersNewRoute,
+  ThreadsRoute: ThreadsRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
