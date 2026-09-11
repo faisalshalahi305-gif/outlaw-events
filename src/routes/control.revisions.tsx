@@ -58,6 +58,8 @@ function formatDate(iso: string) {
 function RevisionsPanel() {
   const load = useServerFn(listEdits);
   const decide = useServerFn(decideEdit);
+  const loadThreads = useServerFn(listThreads);
+  const dropThread = useServerFn(adminDeleteThread);
 
   const [requests, setRequests] = useState<EditRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,6 +68,7 @@ function RevisionsPanel() {
   const [message, setMessage] = useState("");
   const [tab, setTab] = useState<(typeof TABS)[number]["value"]>("pending");
   const [query, setQuery] = useState("");
+  const [threads, setThreads] = useState<ThreadCard[]>([]);
 
   const refresh = async () => {
     try {
