@@ -6,7 +6,8 @@ import { ArrowRight, ImagePlus, Loader2, Plus, Save, Trash2, X } from "lucide-re
 import { supabase } from "@/integrations/supabase/client";
 import { VisitorMenu } from "@/components/VisitorMenu";
 import { useVisitorNumber } from "@/lib/use-visitor";
-import { getThread, saveThread } from "@/lib/threads.functions";
+import { adminSaveThread, getThread, submitThreadRequest } from "@/lib/threads.functions";
+import { readAccessToken, readVisitorToken } from "@/lib/gate-identity";
 import { THREAD_BUCKET, type ThreadEntry } from "@/lib/threads-shared";
 import logoAsset from "@/assets/outlaw-mark.jpg";
 
@@ -17,12 +18,22 @@ const uid = () =>
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2);
 
-/** Create or edit a thread — same editing surface as the events board. */
-export function ThreadEditor({ threadId }: { threadId?: string }) {
+/**
+ * Thread editing surface. Visitors send their thread to the review queue in the
+ * control panel; in admin mode the changes are applied to the thread directly.
+ */
+export function ThreadEditor({
+  threadId,
+  adminMode = false,
+}: {
+  threadId?: string;
+  adminMode?: boolean;
+}) {
   const router = useRouter();
   const visitorNumber = useVisitorNumber();
   const fetchThread = useServerFn(getThread);
-  const persist = useServerFn(saveThread);
+  const sendForReview = useServerFn(submitThreadRequest);
+  const saveAsAdmin = useServerFn(adminSaveThread);
 
   const [title, setTitle] = useState("");
   const [excerpt, setExcerpt] = useState("");
