@@ -44,9 +44,9 @@ export function cleanThreadPayload(value: unknown): ThreadPayload | null {
   if (!value || typeof value !== "object") return null;
   const raw = value as Record<string, unknown>;
   return {
-    title: String(raw.title ?? "").slice(0, 200),
-    excerpt: String(raw.excerpt ?? "").slice(0, 500),
-    coverPath: String(raw.coverPath ?? "").slice(0, 400),
+    title: String(raw["title"] ?? "").slice(0, 200),
+    excerpt: String(raw["excerpt"] ?? "").slice(0, 500),
+    coverPath: String(raw["coverPath"] ?? "").slice(0, 400),
   };
 }
 
