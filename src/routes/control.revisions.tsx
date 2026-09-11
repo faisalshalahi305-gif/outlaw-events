@@ -312,6 +312,58 @@ function RevisionsPanel() {
             ))}
           </div>
         )}
+
+        <section className="mt-14">
+          <h2 className="mb-2 text-center text-xl font-extrabold text-primary">
+            إدارة الثريدات المنشورة
+          </h2>
+          <p className="mb-6 text-center text-sm text-muted-foreground">
+            التعديل والحذف من هنا فقط، ويُطبّق فورًا على الموقع.
+          </p>
+
+          {threads.length === 0 ? (
+            <p className="text-center text-sm text-muted-foreground">لا توجد ثريدات منشورة.</p>
+          ) : (
+            <div className="space-y-4">
+              {threads.map((thread) => (
+                <article
+                  key={thread.id}
+                  className="surface-card rounded-3xl border border-border p-4 text-right"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <span className="text-sm font-extrabold text-foreground">{thread.title}</span>
+                    <span className="text-[11px] text-muted-foreground">
+                      {formatDate(thread.createdAt)}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{thread.excerpt}</p>
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    <Link
+                      to="/control/threads/$id"
+                      params={{ id: thread.id }}
+                      className="inline-flex items-center gap-2 rounded-xl border border-primary/50 px-5 py-2 text-xs font-bold text-primary transition-colors hover:bg-accent"
+                    >
+                      <PencilLine className="h-3.5 w-3.5" />
+                      تعديل الثريد
+                    </Link>
+                    <button
+                      onClick={() => removeThread(thread.id, thread.title)}
+                      disabled={busy === thread.id}
+                      className="inline-flex items-center gap-2 rounded-xl border border-input px-5 py-2 text-xs font-bold text-muted-foreground transition-colors hover:border-destructive/60 hover:text-destructive disabled:opacity-60"
+                    >
+                      {busy === thread.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-3.5 w-3.5" />
+                      )}
+                      حذف الثريد
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </main>
   );
