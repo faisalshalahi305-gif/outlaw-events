@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1788778477266,
+      "tag": "0000_outlaw_events_clean_schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788778501391,
+      "tag": "0001_block_images_storage_policies",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788778564100,
+      "tag": "0002_storage_objects_grants",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788778630409,
+      "tag": "0003_close_content_import_window",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788861332104,
+      "tag": "0004_storage_read_policy_block_images",
+      "breakpoints": true
+    }
+  ]
+}

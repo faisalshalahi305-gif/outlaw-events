@@ -26,6 +26,7 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+  --font-display: var(--font-display);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -34,6 +35,7 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-glow: var(--primary-glow);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -62,26 +64,43 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
+  --radius: 1rem;
+  --font-sans: "Almarai", system-ui, sans-serif;
+  --font-display: "Cinzel", "Almarai", serif;
+  --background: oklch(0.19 0.026 214);
+  --foreground: oklch(0.97 0.008 210);
+  --card: oklch(0.235 0.031 213);
+  --card-foreground: oklch(0.97 0.008 210);
+  --popover: oklch(0.22 0.03 213);
+  --popover-foreground: oklch(0.97 0.008 210);
+  --primary: oklch(0.75 0.108 202);
+  --primary-foreground: oklch(0.18 0.03 214);
+  --primary-glow: oklch(0.86 0.083 195);
+  --secondary: oklch(0.29 0.035 212);
+  --secondary-foreground: oklch(0.96 0.008 210);
+  --muted: oklch(0.28 0.03 212);
+  --muted-foreground: oklch(0.74 0.024 208);
+  --accent: oklch(0.33 0.05 205);
+  --accent-foreground: oklch(0.96 0.01 200);
+  --destructive: oklch(0.62 0.2 25);
+  --destructive-foreground: oklch(0.98 0.005 240);
+  --border: oklch(0.85 0.06 200 / 18%);
+  --input: oklch(0.85 0.06 200 / 22%);
+  --ring: oklch(0.75 0.108 202);
+  --gradient-hero: radial-gradient(
+      110% 80% at 50% 0%,
+      color-mix(in oklab, var(--primary) 22%, transparent),
+      transparent 70%
+    ),
+    linear-gradient(180deg, oklch(0.22 0.033 213), oklch(0.16 0.022 215));
+  --gradient-primary: linear-gradient(135deg, var(--primary), var(--primary-glow));
+  --gradient-card: linear-gradient(
+    160deg,
+    color-mix(in oklab, var(--primary) 8%, var(--card)),
+    var(--card)
+  );
+  --shadow-elegant: 0 24px 60px -28px color-mix(in oklab, var(--primary) 55%, transparent);
+  --shadow-soft: 0 8px 24px -14px oklch(0 0 0 / 70%);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -140,5 +159,115 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-family: var(--font-sans);
+    background-image: var(--gradient-hero);
+    background-attachment: fixed;
+  }
+}
+
+@utility surface-card {
+  background-image: var(--gradient-card);
+  box-shadow: var(--shadow-soft);
+}
+
+@utility glow-ring {
+  box-shadow: var(--shadow-elegant);
+}
+
+@utility ornament-line {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--primary) 60%, transparent),
+    transparent
+  );
+}
+
+@utility display-font {
+  font-family: var(--font-display);
+  letter-spacing: 0.28em;
+  font-weight: 700;
+}
+
+@utility wordmark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  background-image: linear-gradient(
+    100deg,
+    color-mix(in oklab, var(--primary) 70%, var(--foreground)),
+    var(--primary-glow),
+    color-mix(in oklab, var(--primary) 70%, var(--foreground))
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: wordmark-shine 7s linear infinite;
+}
+
+@keyframes wordmark-shine {
+  to {
+    background-position: 200% center;
+  }
+}
+
+@utility ornament-diamond {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+
+  &::before,
+  &::after {
+    content: "";
+    height: 1px;
+    width: 3rem;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in oklab, var(--primary) 70%, transparent)
+    );
+  }
+}
+
+@utility rise-in {
+  animation: rise-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility halo {
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: -6px;
+    border-radius: 9999px;
+    background: conic-gradient(
+      from 0deg,
+      transparent,
+      color-mix(in oklab, var(--primary) 55%, transparent),
+      transparent 60%
+    );
+    animation: halo-spin 9s linear infinite;
+    z-index: -1;
+  }
+}
+
+@keyframes halo-spin {
+  to {
+    transform: rotate(1turn);
   }
 }
