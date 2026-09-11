@@ -12,6 +12,9 @@ export type EditEntry = {
   images: string[];
 };
 
+/** Extra fields carried by a thread request (title / excerpt / cover image). */
+export type ThreadPayload = { title: string; excerpt: string; coverPath: string };
+
 export type EditRequest = {
   id: string;
   section: string;
@@ -21,11 +24,31 @@ export type EditRequest = {
   createdAt: string;
   reviewedAt: string | null;
   entries: EditEntry[];
+  /** thread requests only: the thread being updated/deleted */
+  targetId: string | null;
+  /** thread requests only: title, excerpt and cover path */
+  payload: ThreadPayload | null;
   /** signed preview URLs keyed by storage path */
   imageUrls: Record<string, string>;
 };
 
 const SECTIONS = new Set(["characters", "events"]);
+
+export const THREAD_SECTIONS = ["thread_create", "thread_update", "thread_delete"] as const;
+
+export function isThreadSection(section: string): boolean {
+  return (THREAD_SECTIONS as readonly string[]).includes(section);
+}
+
+export function cleanThreadPayload(value: unknown): ThreadPayload | null {
+  if (!value || typeof value !== "object") return null;
+  const raw = value as Record<string, unknown>;
+  return {
+    title: String(raw.title ?? "").slice(0, 200),
+    excerpt: String(raw.excerpt ?? "").slice(0, 500),
+    coverPath: String(raw.coverPath ?? "").slice(0, 400),
+  };
+}
 
 export function cleanSection(value: unknown): string {
   const section = String(value ?? "").trim();
