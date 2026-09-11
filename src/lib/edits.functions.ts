@@ -21,7 +21,44 @@ export type { EditEntry, EditRequest } from "./edits-shared";
 
 async function admin() {
   const { createGateDatabaseClient } = await import("./admin-db.server");
-  return createGateDatabaseClient();
+  // The generated types do not cover every table/column of the external
+  // project, so queries go through a loosely typed handle.
+  return createGateDatabaseClient() as any;
+}
+
+/** Apply an approved thread request: create, update or delete the thread. */
+async function applyThreadRequest(db: any, row: any) {
+  const payload = cleanThreadPayload(row.payload);
+  const entries = cleanThreadEntries(row.entries);
+  const now = new Date().toISOString();
+
+  if (row.section === "thread_delete") {
+    if (!row.target_id) throw new Error("apply_failed");
+    const { error } = await db.from("threads").delete().eq("id", row.target_id);
+    if (error) throw new Error("apply_failed");
+    return;
+  }
+
+  if (!payload?.title || !payload.excerpt || !payload.coverPath) throw new Error("apply_failed");
+
+  const values = {
+    title: payload.title,
+    excerpt: payload.excerpt,
+    cover_path: payload.coverPath,
+    entries,
+    updated_at: now,
+  };
+
+  if (row.section === "thread_update" && row.target_id) {
+    const { error } = await db.from("threads").update(values).eq("id", row.target_id);
+    if (error) throw new Error("apply_failed");
+    return;
+  }
+
+  const { error } = await db
+    .from("threads")
+    .insert({ ...values, visitor_number: row.visitor_number ?? null });
+  if (error) throw new Error("apply_failed");
 }
 
 async function signAll(
@@ -209,7 +246,7 @@ export const decideEdit = createServerFn({ method: "POST" })
     const db = await admin();
     const { data: row, error } = await db
       .from("edit_requests")
-      .select("id, section, entries, status")
+      .select("id, section, entries, status, target_id, payload, visitor_number")
       .eq("id", data.id)
       .maybeSingle();
     if (error || !row) throw new Error("not_found");
@@ -225,7 +262,11 @@ export const decideEdit = createServerFn({ method: "POST" })
       return { ok: true as const };
     }
 
-    await applySnapshot(db, String(row.section), cleanEntries(row.entries));
+    if (isThreadSection(String(row.section))) {
+      await applyThreadRequest(db, row);
+    } else {
+      await applySnapshot(db, String(row.section), cleanEntries(row.entries));
+    }
 
     await db
       .from("edit_requests")
