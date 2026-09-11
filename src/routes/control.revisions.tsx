@@ -232,6 +232,23 @@ function RevisionsPanel() {
                   {formatDate(row.createdAt)}
                 </p>
 
+                {row.payload ? (
+                  <div className="mt-3 rounded-2xl border border-primary/40 p-3">
+                    <p className="text-sm font-extrabold text-foreground">{row.payload.title}</p>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                      {row.payload.excerpt}
+                    </p>
+                    {row.payload.coverPath && row.imageUrls[row.payload.coverPath] ? (
+                      <img
+                        src={row.imageUrls[row.payload.coverPath]}
+                        alt={row.payload.title}
+                        loading="lazy"
+                        className="mt-3 h-auto max-h-72 w-full rounded-xl border border-border object-cover"
+                      />
+                    ) : null}
+                  </div>
+                ) : null}
+
                 {row.note ? (
                   <p className="mt-3 rounded-2xl border border-border/60 p-3 text-sm leading-6 text-foreground">
                     {row.note}
