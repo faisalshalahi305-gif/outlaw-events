@@ -127,6 +127,12 @@ function RootComponent() {
   const { supabaseConfig } = Route.useLoaderData();
   setBrowserSupabaseConfig(supabaseConfig);
 
+  // A prerendered/static build can ship an empty config, so top it up once in
+  // the browser instead of letting the first storage call throw.
+  useEffect(() => {
+    void ensureBrowserSupabaseConfig();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
