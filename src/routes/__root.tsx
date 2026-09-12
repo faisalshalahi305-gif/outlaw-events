@@ -13,7 +13,10 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { getBrowserSupabaseConfig } from "@/lib/public-config.functions";
-import { setBrowserSupabaseConfig } from "@/integrations/supabase/runtime-config";
+import {
+  ensureBrowserSupabaseConfig,
+  setBrowserSupabaseConfig,
+} from "@/integrations/supabase/runtime-config";
 
 function NotFoundComponent() {
   return (
