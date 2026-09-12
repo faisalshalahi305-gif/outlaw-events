@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { ensureBrowserSupabaseConfig } from "@/integrations/supabase/runtime-config";
 import { VisitorMenu } from "@/components/VisitorMenu";
 import { useVisitorNumber } from "@/lib/use-visitor";
 import { loadSection, publishSection, submitEdit } from "@/lib/edits.functions";
@@ -90,23 +91,31 @@ export function SectionBoard({
     setRows((list) => list.map((r) => (r.key === key ? next(r) : r)));
 
   const uploadImages = async (key: string, files: File[]) => {
+    try {
+      await ensureBrowserSupabaseConfig();
+    } catch (error) {
+      console.error(error);
+    }
     for (const file of files) {
       const ext = (file.name.split(".").pop() || "img").toLowerCase();
       const path = `${publishMode ? "live" : "edits"}/${section}/${uid()}.${ext}`;
-      const { error } = await supabase.storage.from(EDIT_BUCKET).upload(path, file, {
-        contentType: file.type || "application/octet-stream",
-        upsert: true,
-      });
-      if (error) {
+      try {
+        const { error } = await supabase.storage.from(EDIT_BUCKET).upload(path, file, {
+          contentType: file.type || "application/octet-stream",
+          upsert: true,
+        });
+        if (error) throw error;
+        const { data } = await supabase.storage
+          .from(EDIT_BUCKET)
+          .createSignedUrl(path, 60 * 60 * 6);
+        setUrls((prev) => ({ ...prev, [path]: data?.signedUrl ?? "" }));
+        patch(key, (r) => ({ ...r, images: [...r.images, path] }));
+      } catch (error) {
+        console.error(error);
         setMessage("تعذّر رفع الصورة");
         setTimeout(() => setMessage(""), 3000);
         return;
       }
-      const { data } = await supabase.storage
-        .from(EDIT_BUCKET)
-        .createSignedUrl(path, 60 * 60 * 6);
-      setUrls((prev) => ({ ...prev, [path]: data?.signedUrl ?? "" }));
-      patch(key, (r) => ({ ...r, images: [...r.images, path] }));
     }
   };
 

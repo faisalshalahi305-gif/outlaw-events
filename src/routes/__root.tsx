@@ -13,7 +13,10 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { getBrowserSupabaseConfig } from "@/lib/public-config.functions";
-import { setBrowserSupabaseConfig } from "@/integrations/supabase/runtime-config";
+import {
+  ensureBrowserSupabaseConfig,
+  setBrowserSupabaseConfig,
+} from "@/integrations/supabase/runtime-config";
 
 function NotFoundComponent() {
   return (
@@ -126,6 +129,12 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const { supabaseConfig } = Route.useLoaderData();
   setBrowserSupabaseConfig(supabaseConfig);
+
+  // A prerendered/static build can ship an empty config, so top it up once in
+  // the browser instead of letting the first storage call throw.
+  useEffect(() => {
+    void ensureBrowserSupabaseConfig();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight, ImagePlus, Loader2, Plus, Save, Trash2, X } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { ensureBrowserSupabaseConfig } from "@/integrations/supabase/runtime-config";
 import { VisitorMenu } from "@/components/VisitorMenu";
 import { useVisitorNumber } from "@/lib/use-visitor";
 import { adminSaveThread, getThread, submitThreadRequest } from "@/lib/threads.functions";
@@ -80,19 +81,26 @@ export function ThreadEditor({
   const upload = async (file: File): Promise<string | null> => {
     const ext = (file.name.split(".").pop() || "img").toLowerCase();
     const path = `threads/${uid()}.${ext}`;
-    const { error } = await supabase.storage.from(THREAD_BUCKET).upload(path, file, {
-      contentType: file.type || "application/octet-stream",
-      upsert: true,
-    });
-    if (error) {
+    try {
+      await ensureBrowserSupabaseConfig();
+      const { error } = await supabase.storage.from(THREAD_BUCKET).upload(path, file, {
+        contentType: file.type || "application/octet-stream",
+        upsert: true,
+      });
+      if (error) {
+        flash("تعذّر رفع الصورة");
+        return null;
+      }
+      const { data } = await supabase.storage
+        .from(THREAD_BUCKET)
+        .createSignedUrl(path, 60 * 60 * 6);
+      setUrls((prev) => ({ ...prev, [path]: data?.signedUrl ?? "" }));
+      return path;
+    } catch (error) {
+      console.error(error);
       flash("تعذّر رفع الصورة");
       return null;
     }
-    const { data } = await supabase.storage
-      .from(THREAD_BUCKET)
-      .createSignedUrl(path, 60 * 60 * 6);
-    setUrls((prev) => ({ ...prev, [path]: data?.signedUrl ?? "" }));
-    return path;
   };
 
   const patch = (key: string, next: (row: Row) => Row) =>
