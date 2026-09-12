@@ -42,7 +42,7 @@ export const getKickStreamers = createServerFn({ method: "GET" }).handler(async 
 export const checkKickUsername = createServerFn({ method: "POST" })
   .inputValidator((data: { username: string }) => ({ username: cleanUsername(data?.username) }))
   .handler(async ({ data }) => {
-    const { fetchKickChannel, publicStreamersClient } = await import("./streamers.server");
+    const { fetchKickChannel, adminStreamersClient } = await import("./streamers.server");
     const channel = await fetchKickChannel(data.username);
     if (!channel) return { ok: false as const, reason: "not_found" as const };
 
@@ -53,7 +53,9 @@ export const checkKickUsername = createServerFn({ method: "POST" })
     };
     const displayName = String(user.username || data.username);
 
-    const db = publicStreamersClient();
+    // Pending rows are hidden from the public policy, so the existence check
+    // has to run privileged or a visitor is told a listed channel is new.
+    const db = adminStreamersClient();
     const { data: existing } = await db
       .from("streamers")
       .select("id")
