@@ -83,7 +83,9 @@ export const submitStreamerRequest = createServerFn({ method: "POST" })
         : null,
   }))
   .handler(async ({ data }) => {
-    const { fetchKickChannel, adminStreamersClient } = await import("./streamers.server");
+    const { fetchKickChannel, adminStreamersClient, profileFromChannel } = await import(
+      "./streamers.server"
+    );
     const channel = await fetchKickChannel(data.username);
     if (!channel) return { ok: false as const, reason: "not_found" as const };
 
@@ -102,7 +104,7 @@ export const submitStreamerRequest = createServerFn({ method: "POST" })
 
     const { error } = await db.from("streamers").insert({
       username: data.username,
-      display_name: String(channel["user"]?.username ?? data.username),
+      ...profileFromChannel(channel, data.username),
       status: "pending",
       visitor_number: data.visitorNumber,
     });
@@ -223,7 +225,9 @@ export const addStreamer = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data }) => {
     await requireGateAdmin(data.accessToken, data.visitorToken);
-    const { fetchKickChannel, adminStreamersClient } = await import("./streamers.server");
+    const { fetchKickChannel, adminStreamersClient, profileFromChannel } = await import(
+      "./streamers.server"
+    );
     const channel = await fetchKickChannel(data.username);
     if (!channel) return { ok: false as const, reason: "not_found" as const };
 
@@ -236,7 +240,11 @@ export const addStreamer = createServerFn({ method: "POST" })
     if (existing) {
       const { error } = await db
         .from("streamers")
-        .update({ status: "approved", reviewed_at: new Date().toISOString() })
+        .update({
+          status: "approved",
+          reviewed_at: new Date().toISOString(),
+          ...profileFromChannel(channel, data.username),
+        })
         .eq("id", (existing as { id: string }).id);
       if (error) throw new Error("save_failed");
       return { ok: true as const };
@@ -244,7 +252,7 @@ export const addStreamer = createServerFn({ method: "POST" })
 
     const { error } = await db.from("streamers").insert({
       username: data.username,
-      display_name: String(channel["user"]?.username ?? data.username),
+      ...profileFromChannel(channel, data.username),
       status: "approved",
       reviewed_at: new Date().toISOString(),
     });
