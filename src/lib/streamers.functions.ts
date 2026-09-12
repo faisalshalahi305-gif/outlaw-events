@@ -42,7 +42,7 @@ export const getKickStreamers = createServerFn({ method: "GET" }).handler(async 
 export const checkKickUsername = createServerFn({ method: "POST" })
   .inputValidator((data: { username: string }) => ({ username: cleanUsername(data?.username) }))
   .handler(async ({ data }) => {
-    const { fetchKickChannel, publicStreamersClient } = await import("./streamers.server");
+    const { fetchKickChannel, adminStreamersClient } = await import("./streamers.server");
     const channel = await fetchKickChannel(data.username);
     if (!channel) return { ok: false as const, reason: "not_found" as const };
 
@@ -53,7 +53,9 @@ export const checkKickUsername = createServerFn({ method: "POST" })
     };
     const displayName = String(user.username || data.username);
 
-    const db = publicStreamersClient();
+    // Pending rows are hidden from the public policy, so the existence check
+    // has to run privileged or a visitor is told a listed channel is new.
+    const db = adminStreamersClient();
     const { data: existing } = await db
       .from("streamers")
       .select("id")
@@ -83,7 +85,9 @@ export const submitStreamerRequest = createServerFn({ method: "POST" })
         : null,
   }))
   .handler(async ({ data }) => {
-    const { fetchKickChannel, adminStreamersClient } = await import("./streamers.server");
+    const { fetchKickChannel, adminStreamersClient, profileFromChannel } = await import(
+      "./streamers.server"
+    );
     const channel = await fetchKickChannel(data.username);
     if (!channel) return { ok: false as const, reason: "not_found" as const };
 
@@ -102,7 +106,7 @@ export const submitStreamerRequest = createServerFn({ method: "POST" })
 
     const { error } = await db.from("streamers").insert({
       username: data.username,
-      display_name: String(channel["user"]?.username ?? data.username),
+      ...profileFromChannel(channel, data.username),
       status: "pending",
       visitor_number: data.visitorNumber,
     });
@@ -223,7 +227,9 @@ export const addStreamer = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data }) => {
     await requireGateAdmin(data.accessToken, data.visitorToken);
-    const { fetchKickChannel, adminStreamersClient } = await import("./streamers.server");
+    const { fetchKickChannel, adminStreamersClient, profileFromChannel } = await import(
+      "./streamers.server"
+    );
     const channel = await fetchKickChannel(data.username);
     if (!channel) return { ok: false as const, reason: "not_found" as const };
 
@@ -236,7 +242,11 @@ export const addStreamer = createServerFn({ method: "POST" })
     if (existing) {
       const { error } = await db
         .from("streamers")
-        .update({ status: "approved", reviewed_at: new Date().toISOString() })
+        .update({
+          status: "approved",
+          reviewed_at: new Date().toISOString(),
+          ...profileFromChannel(channel, data.username),
+        })
         .eq("id", (existing as { id: string }).id);
       if (error) throw new Error("save_failed");
       return { ok: true as const };
@@ -244,7 +254,7 @@ export const addStreamer = createServerFn({ method: "POST" })
 
     const { error } = await db.from("streamers").insert({
       username: data.username,
-      display_name: String(channel["user"]?.username ?? data.username),
+      ...profileFromChannel(channel, data.username),
       status: "approved",
       reviewed_at: new Date().toISOString(),
     });

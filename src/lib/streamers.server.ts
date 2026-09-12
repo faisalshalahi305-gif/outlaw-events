@@ -149,6 +149,23 @@ async function findKickSlug(username: string): Promise<string | null> {
   }
 }
 
+/**
+ * One fast pass over the likely slugs — used when refreshing the public list,
+ * where a stored profile already covers a channel Kick refuses to answer for.
+ */
+export async function fetchKickChannelQuick(
+  username: string,
+): Promise<Record<string, any> | null> {
+  for (const candidate of slugVariants(username)) {
+    const result = await tryKickEndpoint(
+      `https://kick.com/api/v2/channels/${encodeURIComponent(candidate)}`,
+    );
+    if (result === "retry") continue;
+    return result;
+  }
+  return null;
+}
+
 /** Returns the channel payload, or null when the Kick account does not exist. */
 export async function fetchKickChannel(username: string): Promise<Record<string, any> | null> {
   const slug = encodeURIComponent(username);
@@ -216,13 +233,13 @@ function defaultAvatar(username: string): string {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=1a1a1a&color=53fc18&bold=true`;
 }
 
-function fallback(username: string): KickStreamer {
+function fallback(username: string, stored?: StoredStreamer | null): KickStreamer {
   return {
     username,
-    displayName: username,
-    avatar: defaultAvatar(username),
-    bio: "",
-    followers: 0,
+    displayName: stored?.displayName || username,
+    avatar: stored?.avatar || defaultAvatar(username),
+    bio: stored?.bio ?? "",
+    followers: stored?.followers ?? 0,
     isLive: false,
     viewerCount: 0,
     streamTitle: "",
@@ -233,10 +250,15 @@ function fallback(username: string): KickStreamer {
   };
 }
 
-async function fetchOne(username: string): Promise<KickStreamer> {
+async function fetchOne(
+  username: string,
+  stored?: StoredStreamer | null,
+): Promise<KickStreamer> {
   try {
-    const data = await fetchKickChannel(username);
-    if (!data) return fallback(username);
+    // The list refresh uses the quick lookup: a slow multi-attempt search for
+    // one blocked channel must not hold up the whole page.
+    const data = await fetchKickChannelQuick(username);
+    if (!data) return fallback(username, stored);
 
     const live = (data["livestream"] ?? null) as {
       viewer_count?: number;
@@ -256,11 +278,11 @@ async function fetchOne(username: string): Promise<KickStreamer> {
 
     return {
       username,
-      displayName: user.username || username,
-      avatar: user.profile_pic || defaultAvatar(username),
+      displayName: user.username || stored?.displayName || username,
+      avatar: user.profile_pic || stored?.avatar || defaultAvatar(username),
       // Many channels leave the bio empty; show what they last streamed instead.
-      bio: bio || (category ? `آخر بث: ${category}` : ""),
-      followers: Number(data["followers_count"] ?? 0),
+      bio: bio || (category ? `آخر بث: ${category}` : "") || (stored?.bio ?? ""),
+      followers: Number(data["followers_count"] ?? 0) || (stored?.followers ?? 0),
       isLive: live !== null,
       viewerCount: live?.viewer_count ?? 0,
       streamTitle: live?.session_title ?? "",
@@ -271,17 +293,26 @@ async function fetchOne(username: string): Promise<KickStreamer> {
     };
 
   } catch {
-    return fallback(username);
+    return fallback(username, stored);
   }
 }
 
 
-/** The approved streamer usernames, managed from the secret control panel. */
-export async function loadApprovedUsernames(): Promise<string[]> {
+/** Stored profile of an approved streamer, used when Kick is slow or blocked. */
+export type StoredStreamer = {
+  username: string;
+  displayName: string;
+  avatar: string | null;
+  bio: string;
+  followers: number;
+};
+
+/** The approved streamers, managed from the secret control panel. */
+export async function loadApprovedStreamers(): Promise<StoredStreamer[]> {
   const db = publicStreamersClient();
   const { data, error } = await db
     .from("streamers")
-    .select("username")
+    .select("username, display_name, avatar_url, bio, followers")
     .eq("status", "approved")
     .order("created_at", { ascending: true })
     .limit(1000);
@@ -292,19 +323,87 @@ export async function loadApprovedUsernames(): Promise<string[]> {
     if (error.code === "PGRST205" || error.code === "42P01") return [];
     throw new Error("streamers_load_failed");
   }
-  return (data ?? []).map((row: { username: string }) => row.username);
+  return (data ?? []).map((row: any) => ({
+    username: String(row.username),
+    displayName: String(row.display_name || row.username),
+    avatar: row.avatar_url ? String(row.avatar_url) : null,
+    bio: String(row.bio ?? ""),
+    followers: Number(row.followers ?? 0),
+  }));
 }
 
-/** Fetch every approved Kick channel with a small concurrency window. */
+/** Kept for callers that only need the usernames. */
+export async function loadApprovedUsernames(): Promise<string[]> {
+  return (await loadApprovedStreamers()).map((row) => row.username);
+}
+
+/** The profile fields worth remembering so a card is never empty. */
+export function profileFromChannel(channel: Record<string, any>, username: string) {
+  const user = (channel["user"] ?? {}) as {
+    username?: string;
+    profile_pic?: string | null;
+    bio?: string | null;
+  };
+  const categories = (channel["recent_categories"] ?? []) as Array<{ name?: string }>;
+  const category = categories[0]?.name?.trim() ?? "";
+  const bio = (user.bio ?? "").trim();
+  return {
+    display_name: String(user.username || username),
+    avatar_url: user.profile_pic ? String(user.profile_pic) : null,
+    bio: bio || (category ? `آخر بث: ${category}` : ""),
+    followers: Number(channel["followers_count"] ?? 0),
+  };
+}
+
+/** Best-effort: remember the freshly fetched profile for the next page load. */
+async function rememberProfiles(
+  rows: { username: string; displayName: string; avatar: string; bio: string; followers: number }[],
+) {
+  if (!rows.length) return;
+  try {
+    const db = adminStreamersClient();
+    await Promise.all(
+      rows.map((row) =>
+        db
+          .from("streamers")
+          .update({
+            display_name: row.displayName,
+            avatar_url: row.avatar,
+            bio: row.bio,
+            followers: row.followers,
+            synced_at: new Date().toISOString(),
+          })
+          .ilike("username", row.username),
+      ),
+    );
+  } catch (error) {
+    console.error("[streamers] profile cache update failed", error);
+  }
+}
+
+/** Fetch every approved Kick channel, falling back to the stored profile. */
 export async function loadKickStreamers(): Promise<KickStreamer[]> {
-  const names = await loadApprovedUsernames();
+  const stored = await loadApprovedStreamers();
   const results: KickStreamer[] = [];
   const CONCURRENCY = 25;
 
-  for (let i = 0; i < names.length; i += CONCURRENCY) {
-    const chunk = names.slice(i, i + CONCURRENCY);
-    results.push(...(await Promise.all(chunk.map(fetchOne))));
+  for (let i = 0; i < stored.length; i += CONCURRENCY) {
+    const chunk = stored.slice(i, i + CONCURRENCY);
+    results.push(...(await Promise.all(chunk.map((row) => fetchOne(row.username, row)))));
   }
+
+  // Keep the stored copy fresh, but only for channels Kick actually answered.
+  await rememberProfiles(
+    results
+      .filter((row) => row.avatar && !row.avatar.startsWith("https://ui-avatars.com/"))
+      .map((row) => ({
+        username: row.username,
+        displayName: row.displayName,
+        avatar: row.avatar,
+        bio: row.bio,
+        followers: row.followers,
+      })),
+  );
 
   return results.sort((a, b) =>
     a.isLive === b.isLive ? b.followers - a.followers : a.isLive ? -1 : 1,
