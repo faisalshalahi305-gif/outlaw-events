@@ -5,6 +5,7 @@ import logoAsset from "@/assets/outlaw-mark.jpg";
 import { ensureVisitor } from "@/lib/gate.functions";
 import { VisitorMenu } from "@/components/VisitorMenu";
 import { TopNav } from "@/components/TopNav";
+import { OfficialAccounts } from "@/components/OfficialAccounts";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -94,7 +95,7 @@ function Home() {
       </div>
 
 
-      <div className="relative z-10 w-full max-w-md text-center rise-in">
+      <div className="relative z-10 flex w-full max-w-md flex-1 flex-col justify-center text-center rise-in">
         <button
           type="button"
           aria-label="شعار Outlaw"
@@ -125,6 +126,8 @@ function Home() {
           {visitorNumber ? `زائر-${visitorNumber}` : ""}
         </p>
       </div>
+
+      <OfficialAccounts />
     </main>
   );
 }
