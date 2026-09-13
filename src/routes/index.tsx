@@ -5,6 +5,7 @@ import logoAsset from "@/assets/outlaw-mark.jpg";
 import { ensureVisitor } from "@/lib/gate.functions";
 import { VisitorMenu } from "@/components/VisitorMenu";
 import { TopNav } from "@/components/TopNav";
+import { OfficialAccounts } from "@/components/OfficialAccounts";
 
 export const Route = createFileRoute("/")({
   head: () => ({
