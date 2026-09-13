@@ -126,6 +126,8 @@ function Home() {
           {visitorNumber ? `زائر-${visitorNumber}` : ""}
         </p>
       </div>
+
+      <OfficialAccounts />
     </main>
   );
 }
