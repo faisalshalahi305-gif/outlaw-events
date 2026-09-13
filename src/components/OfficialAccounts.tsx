@@ -1,5 +1,3 @@
-import { ornamentLine } from "@/lib/utils";
-
 const ACCOUNTS = [
   {
     name: "Discord",
